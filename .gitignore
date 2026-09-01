@@ -20,7 +20,17 @@ build
 # other
 eclipse
 run
-runs
-run-data
+libs
 
-repo
+# custom
+logs
+
+# Local gradle customizations (e.g. added mods)
+custom.gradle
+# Flatdir repo for mods not available on a proper Maven server
+flatdir
+
+# cache
+.cache
+__pycache__
+Thumbs.db
