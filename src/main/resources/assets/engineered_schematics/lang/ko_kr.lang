@@ -1,0 +1,22 @@
+#Multiblock names, sourced from Immersive Engineering's own block names
+desc.engineered_schematics.multiblock.IE:CokeOven=코크스 오븐
+desc.engineered_schematics.multiblock.IE:AlloySmelter=합금 가마
+desc.engineered_schematics.multiblock.IE:BlastFurnace=원유 용광로
+desc.engineered_schematics.multiblock.IE:BlastFurnaceAdvanced=강화 용광로
+desc.engineered_schematics.multiblock.IE:MetalPress=금속 압축기
+desc.engineered_schematics.multiblock.IE:Crusher=분해기
+desc.engineered_schematics.multiblock.IE:SheetmetalTank=유체 탱크
+desc.engineered_schematics.multiblock.IE:Silo=아이템 사일로
+desc.engineered_schematics.multiblock.IE:Assembler=조립기
+desc.engineered_schematics.multiblock.IE:AutoWorkbench=자동화된 엔지니어의 워크벤치
+desc.engineered_schematics.multiblock.IE:BottlingMachine=병조림기
+desc.engineered_schematics.multiblock.IE:Squeezer=산업용 압착기
+desc.engineered_schematics.multiblock.IE:Fermenter=산업용 발효기
+desc.engineered_schematics.multiblock.IE:Refinery=정제기
+desc.engineered_schematics.multiblock.IE:DieselGenerator=정유 발전기
+desc.engineered_schematics.multiblock.IE:Excavator=굴착기
+desc.engineered_schematics.multiblock.IE:BucketWheel=양동이 바퀴
+desc.engineered_schematics.multiblock.IE:ArcFurnace=아크 화로
+desc.engineered_schematics.multiblock.IE:Lightningrod=빛나는 막대기
+desc.engineered_schematics.multiblock.IE:Mixer=혼합기
+desc.engineered_schematics.multiblock.IE:Feedthrough=피드스루 절연체

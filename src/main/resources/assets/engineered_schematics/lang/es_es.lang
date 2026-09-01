@@ -1,0 +1,22 @@
+#Multiblock names, sourced from Immersive Engineering's own block names
+desc.engineered_schematics.multiblock.IE:CokeOven=Horno de coque
+desc.engineered_schematics.multiblock.IE:AlloySmelter=Horno de aleaciones
+desc.engineered_schematics.multiblock.IE:BlastFurnace=Horno infernal
+desc.engineered_schematics.multiblock.IE:BlastFurnaceAdvanced=Horno infernal mejorado
+desc.engineered_schematics.multiblock.IE:MetalPress=Prensa de metal
+desc.engineered_schematics.multiblock.IE:Crusher=Trituradora
+desc.engineered_schematics.multiblock.IE:SheetmetalTank=Tanque de fluidos
+desc.engineered_schematics.multiblock.IE:Silo=Silo
+desc.engineered_schematics.multiblock.IE:Assembler=Ensamblador
+desc.engineered_schematics.multiblock.IE:AutoWorkbench=Mesa de trabajo del ingeniero automatizada
+desc.engineered_schematics.multiblock.IE:BottlingMachine=Embotelladora industrial
+desc.engineered_schematics.multiblock.IE:Squeezer=Exprimidor industrial
+desc.engineered_schematics.multiblock.IE:Fermenter=Fermentador industrial
+desc.engineered_schematics.multiblock.IE:Refinery=Refinería
+desc.engineered_schematics.multiblock.IE:DieselGenerator=Generador de Diesel
+desc.engineered_schematics.multiblock.IE:Excavator=Excavador
+desc.engineered_schematics.multiblock.IE:BucketWheel=Rueda de cubos
+desc.engineered_schematics.multiblock.IE:ArcFurnace=Horno de arco eléctrico
+desc.engineered_schematics.multiblock.IE:Lightningrod=Pararrayos
+desc.engineered_schematics.multiblock.IE:Mixer=Mezclador
+desc.engineered_schematics.multiblock.IE:Feedthrough=Macarrón aislante

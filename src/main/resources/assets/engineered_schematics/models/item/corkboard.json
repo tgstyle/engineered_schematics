@@ -1,6 +1,6 @@
 {
   "parent": "immersiveengineering:item/ie_item_base",
   "textures": {
-    "layer0": "engineered_schematics:item/corkboard"
+    "layer0": "engineered_schematics:items/corkboard"
   }
 }

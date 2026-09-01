@@ -1,136 +1,111 @@
 package tech.muddykat.engineered_schematics.item;
 
-import blusunrize.immersiveengineering.api.crafting.BlueprintCraftingRecipe;
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-import blusunrize.immersiveengineering.common.items.EngineersBlueprintItem;
-import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.NotNull;
-import tech.muddykat.engineered_schematics.registry.ESDataComponents;
+import tech.muddykat.engineered_schematics.EngineeredSchematics;
+import tech.muddykat.engineered_schematics.util.ESConveyors;
+import tech.muddykat.engineered_schematics.util.ESLang;
+import tech.muddykat.engineered_schematics.util.ESMultiblocks;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.GameSettings;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.Rotation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.function.BiPredicate;
 
 public class SchematicItem extends Item {
     public SchematicItem() {
-        super(new Properties().stacksTo(1));
+        setRegistryName(EngineeredSchematics.MODID, "multiblock_schematic");
+        setTranslationKey(EngineeredSchematics.MODID + ".multiblock_schematic");
+        setMaxStackSize(1);
+        setCreativeTab(EngineeredSchematics.CREATIVE_TAB);
     }
 
+    public static ESSchematicSettings getSettings(@Nullable ItemStack stack) { return new ESSchematicSettings(stack); }
 
-    @Override
-    public @NotNull Component getName(ItemStack stack)
-    {
-        String selfKey = getDescriptionId(stack);
-        if(stack.has(ESDataComponents.SCHEMATIC_PROJECTION_DATA))
-        {
+    @Override @Nonnull public String getItemStackDisplayName(@Nonnull ItemStack stack) {
+        String selfKey = getTranslationKey(stack);
+        if (ESSchematicSettings.hasSettings(stack)) {
             ESSchematicSettings settings = getSettings(stack);
-            if(settings.getMultiblock() != null)
-            {
-                Component name = settings.getMultiblock().getDisplayName();
-                String key = selfKey+".specific" + (settings.isMirrored() ? ".mirrored" : "");
-                return Component.translatable(key, name).withStyle(ChatFormatting.AQUA);
+            if (settings.getMultiblock() != null) {
+                String key = selfKey + ".specific" + (settings.isMirrored() ? ".mirrored" : "") + ".name";
+                return TextFormatting.AQUA + ESLang.format(key, ESMultiblocks.getDisplayName(settings.getMultiblock()));
             }
         }
-        return Component.translatable(selfKey).withStyle(ChatFormatting.AQUA);
+        return TextFormatting.AQUA + ESLang.translate(selfKey + ".name");
     }
 
-    public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag pIsAdvanced)
-    {
+    @Override @SideOnly(Side.CLIENT) public void addInformation(@Nonnull ItemStack stack, @Nullable World world, @Nonnull List<String> tooltip, @Nonnull ITooltipFlag flag) {
         ESSchematicSettings settings = getSettings(stack);
-        if(settings.getMultiblock() != null){
-            assert worldIn!=null;
-            Vec3i size = settings.getMultiblock().getSize(worldIn);
-            tooltip.add(Component.translatable("desc.engineered_schematics.info.schematic.size", Component.literal("["+ size.getX() +"x" + size.getY() +"x" + size.getZ()+ "]")));
-            MultiblockHandler.IMultiblock mb = settings.getMultiblock();
-            String machine_tier_id = settings.getFormationTool().getDescriptionId();
-            tooltip.add(Component.translatable("desc.engineered_schematics.info.schematic.tier", Component.translatable(machine_tier_id).withStyle(ChatFormatting.AQUA)));
-            tooltip.add(Component.translatable("desc.engineered_schematics.info.schematic.block_info", Component.keybind("shift").withStyle(ChatFormatting.GOLD)));
-        } else{
-            tooltip.add(Component.translatable("desc.engineered_schematics.info.schematic.no_multiblock"));
+        if (settings.getMultiblock() == null) {
+            tooltip.add(ESLang.translate("desc.engineered_schematics.info.schematic.no_multiblock"));
+            return;
         }
+        Vec3i size = SchematicProjection.getSize(settings.getMultiblock());
+        tooltip.add(ESLang.format("desc.engineered_schematics.info.schematic.size", "[" + size.getX() + "x" + size.getY() + "x" + size.getZ() + "]"));
+        tooltip.add(ESLang.format("desc.engineered_schematics.info.schematic.tier", TextFormatting.AQUA + settings.getFormationTool().getDisplayName() + TextFormatting.RESET));
+        tooltip.add(ESLang.format("desc.engineered_schematics.info.schematic.block_info", TextFormatting.GOLD + GameSettings.getKeyDisplayString(Minecraft.getMinecraft().gameSettings.keyBindSneak.getKeyCode()) + TextFormatting.RESET));
     }
 
-    public static ESSchematicSettings getSettings(@Nullable ItemStack stack){
-        return new ESSchematicSettings(stack);
-    }
-
-    @Override
-    public InteractionResult useOn(UseOnContext context)
-    {
-        Player player = context.getPlayer();
-        if(player == null) return InteractionResult.SUCCESS;
-        Level level = context.getLevel();
-        InteractionHand hand = context.getHand();
-        Direction facing = context.getClickedFace();
-        BlockPos pos = context.getClickedPos().above();
-        ItemStack stack = player.getItemInHand(hand);
+    @Override @Nonnull public EnumActionResult onItemUse(@Nonnull EntityPlayer player, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ) {
+        if (hand != EnumHand.MAIN_HAND) { return EnumActionResult.SUCCESS; }
+        ItemStack stack = player.getHeldItem(hand);
         ESSchematicSettings settings = getSettings(stack);
-        // TODO allow configuration options
-        if(hand.equals(InteractionHand.MAIN_HAND))
-        {
-            settings.setPos(pos);
-            settings.setPlaced(true);
+        settings.setPos(pos.up());
+        settings.setPlaced(true);
+        if (player.isSneaking()) {
+            settings.setRotation(rotationFor(player.getHorizontalFacing()));
             settings.applyTo(stack);
-            if(player.isShiftKeyDown())
-            {
-                Rotation rot = player.getDirection().equals(Direction.NORTH) ? Rotation.NONE : (player.getDirection().equals(Direction.EAST) ? Rotation.CLOCKWISE_90 : (player.getDirection().equals(Direction.WEST) ? Rotation.COUNTERCLOCKWISE_90 : Rotation.CLOCKWISE_180));
-                settings.setRotation(rot);
-                settings.applyTo(stack);
-                player.displayClientMessage(Component.translatable("desc.engineered_schematics.info.schematic.rotated"), true);
-                player.displayClientMessage(Component.translatable("desc.engineered_schematics.info.schematic.moved"), true);
-                return InteractionResult.SUCCESS;
-            }
+            player.sendStatusMessage(new TextComponentTranslation("desc.engineered_schematics.info.schematic.rotated"), true);
+            player.sendStatusMessage(new TextComponentTranslation("desc.engineered_schematics.info.schematic.moved"), true);
+            return EnumActionResult.SUCCESS;
         }
-
-        return InteractionResult.SUCCESS;
+        settings.applyTo(stack);
+        return EnumActionResult.SUCCESS;
     }
 
-    @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, Player player, @NotNull InteractionHand hand)
-    {
-        ItemStack stack = player.getItemInHand(hand);
+    @Override @Nonnull public ActionResult<ItemStack> onItemRightClick(@Nonnull World world, @Nonnull EntityPlayer player, @Nonnull EnumHand hand) {
+        ItemStack stack = player.getHeldItem(hand);
         ESSchematicSettings settings = getSettings(stack);
         BlockPos pos = settings.getPos();
-        if(player.isShiftKeyDown() && player.isCreative() && pos != null && settings.getMultiblock() != null)
-        {
-            final BlockPos.MutableBlockPos hit = pos.mutable();
-            if(!level.isClientSide)
-            {
-                // Creative Placement
-                BiPredicate<Integer, SchematicProjection.Info> pred = (layer, info) -> {
-                    BlockPos realPos = info.tPos.offset(hit);
-                    BlockState to_state = info.getModifiedState(level, realPos);
-                    level.setBlockAndUpdate(realPos, to_state);
-                    return false; // Don't ever skip a step.
-                };
-
-                SchematicProjection projection = new SchematicProjection(level, settings.getMultiblock());
+        if (player.isSneaking() && player.capabilities.isCreativeMode && pos != null && settings.getMultiblock() != null) {
+            if (!world.isRemote) {
+                SchematicProjection projection = new SchematicProjection(settings.getMultiblock());
                 projection.setFlip(settings.isMirrored());
                 projection.setRotation(settings.getRotation());
-                projection.processAll(pred);
-
-                player.displayClientMessage(Component.translatable("desc.engineered_schematics.info.schematic.placed"), true);
-
-                return InteractionResultHolder.success(stack);
+                projection.processAll((layer, info) -> {
+                    BlockPos placed = info.tPos.add(pos);
+                    world.setBlockState(placed, info.getModifiedState(), 3);
+                    ItemStack cell = projection.stackFor(info);
+                    if (ESConveyors.isConveyor(cell)) { ESConveyors.applySubtype(world, placed, cell); }
+                    return false;
+                });
+                player.sendStatusMessage(new TextComponentTranslation("desc.engineered_schematics.info.schematic.placed"), true);
             }
+            return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         }
-        return InteractionResultHolder.pass(stack);
+        return new ActionResult<>(EnumActionResult.PASS, stack);
+    }
+
+    private static Rotation rotationFor(EnumFacing facing) {
+        if (facing == EnumFacing.NORTH) { return Rotation.NONE; }
+        if (facing == EnumFacing.EAST) { return Rotation.CLOCKWISE_90; }
+        if (facing == EnumFacing.WEST) { return Rotation.COUNTERCLOCKWISE_90; }
+        return Rotation.CLOCKWISE_180;
     }
 }

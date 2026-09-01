@@ -1,0 +1,38 @@
+#GENERAL
+itemGroup.engineered_schematics=Engineered Schematics
+tile.engineered_schematics.schematic_table_block.name=Чертёжная парта
+desc.engineered_schematics.schematic_table=Чертёжная парта
+engineered_schematics.gui.schematic_table.mirror=Отзеркалить
+item.engineered_schematics.multiblock_schematic.name=Пустая схема
+item.engineered_schematics.multiblock_schematic.specific.name=%s Схема
+desc.engineered_schematics.info.schematic.size=%s
+desc.engineered_schematics.info.schematic.tier=Его можно сформировать с помощью %s
+desc.engineered_schematics.info.schematic.ie_tier=Молота инженера
+desc.engineered_schematics.info.schematic.block_info=Удерживайте [%s] для показа материалов
+desc.engineered_schematics.info.schematic.no_multiblock=Пустые схемы
+desc.engineered_schematics.info.schematic.moved=Схема перемещена
+desc.engineered_schematics.info.schematic.rotated=Схема повернута
+desc.engineered_schematics.info.schematic.placed=(Только для креатива) Размещена схема
+
+#Multiblock names, sourced from Immersive Engineering's own block names
+desc.engineered_schematics.multiblock.IE:CokeOven=Коксовая печь
+desc.engineered_schematics.multiblock.IE:AlloySmelter=Плавильная печь
+desc.engineered_schematics.multiblock.IE:BlastFurnace=Доменная печь
+desc.engineered_schematics.multiblock.IE:BlastFurnaceAdvanced=Продвинутая доменная печь
+desc.engineered_schematics.multiblock.IE:MetalPress=Металлический пресс
+desc.engineered_schematics.multiblock.IE:Crusher=Дробитель
+desc.engineered_schematics.multiblock.IE:SheetmetalTank=Жидкостный резервуар
+desc.engineered_schematics.multiblock.IE:Silo=Силос
+desc.engineered_schematics.multiblock.IE:Assembler=Автоверстак
+desc.engineered_schematics.multiblock.IE:AutoWorkbench=Сборочный конвейер
+desc.engineered_schematics.multiblock.IE:BottlingMachine=Разливочная машина
+desc.engineered_schematics.multiblock.IE:Squeezer=Маслобойня
+desc.engineered_schematics.multiblock.IE:Fermenter=Ферментер
+desc.engineered_schematics.multiblock.IE:Refinery=Очистительный завод
+desc.engineered_schematics.multiblock.IE:DieselGenerator=Дизельный генератор
+desc.engineered_schematics.multiblock.IE:Excavator=Экскаватор
+desc.engineered_schematics.multiblock.IE:BucketWheel=Ковш экскаватора
+desc.engineered_schematics.multiblock.IE:ArcFurnace=Дуговая печь
+desc.engineered_schematics.multiblock.IE:Lightningrod=Молниеотвод
+desc.engineered_schematics.multiblock.IE:Mixer=Смеситель
+desc.engineered_schematics.multiblock.IE:Feedthrough=Проходной изолятор

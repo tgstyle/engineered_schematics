@@ -1,0 +1,22 @@
+#Multiblock names, sourced from Immersive Engineering's own block names
+desc.engineered_schematics.multiblock.IE:CokeOven=コークス炉
+desc.engineered_schematics.multiblock.IE:AlloySmelter=合金窯
+desc.engineered_schematics.multiblock.IE:BlastFurnace=原始高炉
+desc.engineered_schematics.multiblock.IE:BlastFurnaceAdvanced=改良型高炉
+desc.engineered_schematics.multiblock.IE:MetalPress=金属プレス機
+desc.engineered_schematics.multiblock.IE:Crusher=工業用粉砕機
+desc.engineered_schematics.multiblock.IE:SheetmetalTank=液体タンク
+desc.engineered_schematics.multiblock.IE:Silo=アイテムサイロ
+desc.engineered_schematics.multiblock.IE:Assembler=組立機
+desc.engineered_schematics.multiblock.IE:AutoWorkbench=自動工具台
+desc.engineered_schematics.multiblock.IE:BottlingMachine=瓶詰機
+desc.engineered_schematics.multiblock.IE:Squeezer=工業用圧搾機
+desc.engineered_schematics.multiblock.IE:Fermenter=工業用発酵槽
+desc.engineered_schematics.multiblock.IE:Refinery=工業用精製機
+desc.engineered_schematics.multiblock.IE:DieselGenerator=ディーゼル発電機
+desc.engineered_schematics.multiblock.IE:Excavator=大型掘削機
+desc.engineered_schematics.multiblock.IE:BucketWheel=バケットホイール
+desc.engineered_schematics.multiblock.IE:ArcFurnace=アーク炉
+desc.engineered_schematics.multiblock.IE:Lightningrod=避雷針
+desc.engineered_schematics.multiblock.IE:Mixer=工業用撹拌機
+desc.engineered_schematics.multiblock.IE:Feedthrough=貫通碍子

@@ -1,23 +1,37 @@
 {
-  "variants": {
-    "facing=east": {
-      "model": "engineered_schematics:block/schematic_table_block",
-      "uvlock": true,
-      "y": 90
-    },
-    "facing=north": {
-      "model": "engineered_schematics:block/schematic_table_block",
-      "uvlock": true
-    },
-    "facing=south": {
-      "model": "engineered_schematics:block/schematic_table_block",
-      "uvlock": true,
-      "y": 180
-    },
-    "facing=west": {
-      "model": "engineered_schematics:block/schematic_table_block",
-      "uvlock": true,
-      "y": 270
-    }
-  }
+	"forge_marker": 1,
+	"defaults": {
+		"transform": "forge:default-block",
+		"model": "engineered_schematics:schematic_table_block.obj",
+		"custom": { "flip-v": true },
+		"textures": { "particle": "engineered_schematics:blocks/schematic_table" }
+	},
+	"variants": {
+		"inventory": [{
+			"transform": {
+				"scale": 0.5,
+				"rotation": [{ "x": 37.5 }, { "y": 45 }],
+				"translation": [-0.1875, -0.1875, 0],
+				"thirdperson": {
+					"scale": 0.3,
+					"translation": [-0.1125, 0.148, -0.0998],
+					"rotation": [{ "x": 100 }, { "y": 45 }]
+				}
+			}
+		}],
+		"facing": {
+			"north": { "transform": { "rotation": { "y": 0 } } },
+			"south": { "transform": { "rotation": { "y": 180 } } },
+			"west": { "transform": { "rotation": { "y": 90 } } },
+			"east": { "transform": { "rotation": { "y": -90 } } }
+		},
+		"dummy": {
+			"false": {},
+			"true": {
+				"model": "engineered_schematics:empty",
+				"custom": {},
+				"textures": { "particle": "engineered_schematics:blocks/schematic_table" }
+			}
+		}
+	}
 }

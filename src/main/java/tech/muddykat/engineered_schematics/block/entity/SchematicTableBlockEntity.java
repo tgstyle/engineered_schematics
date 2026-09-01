@@ -1,181 +1,95 @@
 package tech.muddykat.engineered_schematics.block.entity;
 
-import blusunrize.immersiveengineering.api.IEProperties;
-import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
-import blusunrize.immersiveengineering.api.utils.DirectionalBlockPos;
-import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
-import blusunrize.immersiveengineering.common.blocks.PlacementLimitation;
-import blusunrize.immersiveengineering.common.blocks.wooden.DeskBlock;
+import tech.muddykat.engineered_schematics.block.SchematicDeskBlock;
+
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IGuiTile;
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IHasObjProperty;
+import blusunrize.immersiveengineering.common.blocks.TileEntityIEBase;
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import net.minecraft.core.*;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.ContainerHelper;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.NotNull;
-import tech.muddykat.engineered_schematics.helper.IInteractionObjectES;
-import tech.muddykat.engineered_schematics.registry.ESMenuTypes;
-import tech.muddykat.engineered_schematics.registry.ESRegistry;
+import com.google.common.collect.Lists;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 
-public class SchematicTableBlockEntity extends IEBaseBlockEntity implements IIEInventory, IEBlockInterfaces.IStateBasedDirectional,
-        IEBlockInterfaces.IHasDummyBlocks, IModelOffsetProvider, IInteractionObjectES<SchematicTableBlockEntity>
-{
-    public static final BlockPos MASTER_POS = BlockPos.ZERO;
-    public static final BlockPos DUMMY_POS = new BlockPos(1, 0, 0);
-    private final NonNullList<ItemStack> inventory = NonNullList.withSize(3, ItemStack.EMPTY);
+public class SchematicTableBlockEntity extends TileEntityIEBase implements IIEInventory, IGuiTile, IHasObjProperty {
+    public static final int GUI_ID = 0;
+    private static final ArrayList<String> NO_PAPER = Lists.newArrayList("base_model");
+    private static final ArrayList<String> SOME_PAPER = Lists.newArrayList("base_model", "scroll_1");
+    private static final ArrayList<String> PAPER = Lists.newArrayList("base_model", "scroll_1", "scroll_2");
+    private static final ArrayList<String> MUCH_PAPER = Lists.newArrayList("base_model", "scroll_1", "scroll_2", "scroll_3");
+    private NonNullList<ItemStack> inventory = NonNullList.withSize(3, ItemStack.EMPTY);
+    @SideOnly(Side.CLIENT)
+    private AxisAlignedBB renderAABB;
 
-    public SchematicTableBlockEntity(BlockPos pos, BlockState state)
-    {
-        super(ESRegistry.SCHEMATIC_TABLE_TYPE.get(), pos, state);
+    @Override public void readCustomNBT(NBTTagCompound nbt, boolean descPacket) { this.inventory = Utils.readInventory(nbt.getTagList("inventory", 10), 3); }
+
+    @Override public void writeCustomNBT(NBTTagCompound nbt, boolean descPacket) { nbt.setTag("inventory", Utils.writeInventory(this.inventory)); }
+
+    @SideOnly(Side.CLIENT)
+    @Override @Nonnull public AxisAlignedBB getRenderBoundingBox() {
+        if (this.renderAABB == null) { this.renderAABB = new AxisAlignedBB(getPos().getX() - 1, getPos().getY(), getPos().getZ() - 1, getPos().getX() + 2, getPos().getY() + 2, getPos().getZ() + 2); }
+        return this.renderAABB;
     }
 
-    private AABB renderAABB;
+    @Override public NonNullList<ItemStack> getInventory() { return this.inventory; }
 
-    public AABB getRenderAABB() {
-        if(renderAABB==null)
-            renderAABB = new AABB(getBlockPos().getX()-1, getBlockPos().getY(), getBlockPos().getZ()-1, getBlockPos().getX()+2, getBlockPos().getY()+2, getBlockPos().getZ()+2);
-        return renderAABB;
+    @Override public boolean isStackValid(int slot, ItemStack stack) { return true; }
+
+    @Override public int getSlotLimit(int slot) { return 64; }
+
+    @Override public void doGraphicalUpdates(int slot) { markContainingBlockForUpdate(null); }
+
+    private IBlockState state() { return world.getBlockState(this.pos); }
+
+    public EnumFacing getFacing() {
+        IBlockState state = state();
+        return state.getBlock() instanceof SchematicDeskBlock ? state.getValue(SchematicDeskBlock.FACING) : EnumFacing.NORTH;
     }
 
-    @Override
-    public NonNullList<ItemStack> getInventory()
-    {
-        return this.inventory;
+    public boolean isDummy() {
+        IBlockState state = state();
+        return state.getBlock() instanceof SchematicDeskBlock && state.getValue(SchematicDeskBlock.DUMMY);
     }
 
-    @Override
-    public boolean isStackValid(int slot, ItemStack stack)
-    {
-        return true;
+    public EnumFacing getDummyDirection() { return isDummy() ? getFacing().rotateYCCW() : getFacing().rotateY(); }
+
+    public void placeDummy() {
+        if (isDummy()) { return; }
+        BlockPos dummyPos = this.pos.offset(getDummyDirection());
+        if (!world.getBlockState(dummyPos).getBlock().isReplaceable(world, dummyPos)) { return; }
+        world.setBlockState(dummyPos, state().withProperty(SchematicDeskBlock.DUMMY, true));
     }
 
-    @Override
-    public int getSlotLimit(int slot)
-    {
-        return slot==0?1: 64;
-    }
+    public void breakDummy() { world.setBlockToAir(this.pos.offset(getDummyDirection())); }
 
-    @Override
-    public void doGraphicalUpdates() {}
+    @Override public boolean canOpenGui() { return true; }
 
-    @Override
-    public @NotNull PlacementLimitation getFacingLimitation()
-    {
-        return PlacementLimitation.HORIZONTAL;
-    }
-
-    @Override
-    public boolean canHammerRotate(Direction side, Vec3 hit, LivingEntity entity)
-    {
-        return false;
-    }
-
-    @Override
-    public boolean isDummy()
-    {
-        return getState().getValue(IEProperties.MULTIBLOCKSLAVE);
-    }
+    @Override public int getGuiID() { return GUI_ID; }
 
     @Nullable
-    @Override
-    public SchematicTableBlockEntity master()
-    {
-        if(!isDummy())
-            return this;
-        // Used to provide tile-dependant drops after breaking
-        if(tempMasterBE!=null)
-            return (SchematicTableBlockEntity)tempMasterBE;
-        Direction dummyDir = isDummy()?getFacing().getCounterClockWise(): getFacing().getClockWise();
-        BlockPos masterPos = getBlockPos().relative(dummyDir);
-        BlockEntity te = Utils.getExistingTileEntity(level, masterPos);
-        return (te instanceof SchematicTableBlockEntity)?(SchematicTableBlockEntity)te: null;
+    @Override public SchematicTableBlockEntity getGuiMaster() {
+        if (!isDummy()) { return this; }
+        TileEntity te = world.getTileEntity(pos.offset(getDummyDirection()));
+        return te instanceof SchematicTableBlockEntity ? (SchematicTableBlockEntity)te : null;
     }
 
-    @Override
-    public void placeDummies(BlockPlaceContext ctx, BlockState blockState) {
-        DeskBlock.placeDummies(getBlockState(), level, worldPosition, ctx);
-    }
-
-    @Override
-    public void breakDummies(BlockPos pos, BlockState state)
-    {
-        tempMasterBE = master();
-        Direction dummyDir = isDummy()?getFacing().getCounterClockWise(): getFacing().getClockWise();
-        level.removeBlock(pos.relative(dummyDir), false);
-        if(inventory != null && !inventory.isEmpty()){
-            for(ItemStack item : inventory)
-            {
-                Utils.dropStackAtPos(level, new DirectionalBlockPos(pos, dummyDir), item);
-            }
-        }
-    }
-
-    @Override
-    public SchematicTableBlockEntity getGuiMaster()
-    {
-        if(!isDummy())
-            return this;
-        Direction dummyDir = getFacing().getCounterClockWise();
-        BlockEntity tileEntityModWorkbench = level.getBlockEntity(worldPosition.relative(dummyDir));
-        if(tileEntityModWorkbench instanceof SchematicTableBlockEntity)
-            return (SchematicTableBlockEntity)tileEntityModWorkbench;
-        return null;
-    }
-
-    @Override
-    public ESMenuTypes.ArgContainer<? super SchematicTableBlockEntity, ?> getContainerType()
-    {
-        return ESMenuTypes.SCHEMATICS;
-    }
-
-    @Override
-    public boolean canUseGui(Player var1)
-    {
-        return true;
-    }
-
-    @Override
-    public @NotNull Property<Direction> getFacingProperty()
-    {
-        return IEProperties.FACING_HORIZONTAL;
-    }
-
-    @Override
-    public BlockPos getModelOffset(BlockState blockState, Vec3i vec3i)
-    {
-        if(isDummy())
-            return DUMMY_POS;
-        else
-            return MASTER_POS;
-    }
-
-    @Override
-    public Component getDisplayName()
-    {
-        return Component.translatable("desc.engineered_schematics.schematic_table");
-    }
-
-    @Override
-    public void readCustomNBT(CompoundTag nbt, boolean b, HolderLookup.Provider provider)
-    {
-        ContainerHelper.loadAllItems(nbt, inventory, provider);
-    }
-
-    @Override
-    public void writeCustomNBT(CompoundTag nbt, boolean b, HolderLookup.Provider provider)
-    {
-        ContainerHelper.saveAllItems(nbt, inventory, provider);
+    @Override @Nonnull public ArrayList<String> compileDisplayList() {
+        int paper = this.inventory.get(0).getCount();
+        if (paper > 32) { return MUCH_PAPER; }
+        if (paper > 15) { return PAPER; }
+        if (paper > 0) { return SOME_PAPER; }
+        return NO_PAPER;
     }
 }

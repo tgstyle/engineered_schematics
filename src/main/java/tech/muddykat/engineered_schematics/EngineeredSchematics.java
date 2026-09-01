@@ -1,161 +1,59 @@
 package tech.muddykat.engineered_schematics;
 
-import blusunrize.immersiveengineering.api.ManualHelper;
-import blusunrize.immersiveengineering.api.client.ieobj.IEOBJCallbacks;
-import blusunrize.lib.manual.ManualEntry;
-import blusunrize.lib.manual.ManualInstance;
-import blusunrize.lib.manual.Tree;
-import com.mojang.logging.LogUtils;
-import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.fml.loading.FMLLoader;
-import net.neoforged.neoforge.client.event.EntityRenderersEvent;
-import net.neoforged.neoforge.client.event.ModelEvent;
-import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
-import org.slf4j.Logger;
-import tech.muddykat.engineered_schematics.client.renderer.CorkboardRenderer;
-import tech.muddykat.engineered_schematics.client.renderer.ESDynamicModel;
-import tech.muddykat.engineered_schematics.event.SchematicPickBlockHandler;
-import tech.muddykat.engineered_schematics.helper.SchematicTableCallbacks;
-import tech.muddykat.engineered_schematics.client.screen.SchematicsScreen;
-import tech.muddykat.engineered_schematics.registry.ESDataComponents;
-import tech.muddykat.engineered_schematics.registry.ESMenuTypes;
+import tech.muddykat.engineered_schematics.common.CommonProxy;
+import tech.muddykat.engineered_schematics.event.IMCReceiver;
 import tech.muddykat.engineered_schematics.registry.ESRegistry;
 
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.Mod.Instance;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLInterModComms;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.annotation.Nonnull;
 import java.util.HashMap;
-import java.util.function.Supplier;
-import static tech.muddykat.engineered_schematics.registry.ESRegistry.BLOCK_ITEM_SCHEMATIC_TABLE;
+import java.util.Map;
 
-// The value here should match an entry in the META-INF/mods.toml file
-@Mod(EngineeredSchematics.MODID)
-public class EngineeredSchematics
-{
+@Mod(modid = EngineeredSchematics.MODID, name = EngineeredSchematics.NAME, acceptedMinecraftVersions = "[1.12.2,1.13)", dependencies = "required-after:immersiveengineering@[0.12-92,);required-after:forge@[14.23.5.2847,);")
+public class EngineeredSchematics {
     public static final String MODID = "engineered_schematics";
-    public static final String SCHEMATIC_GUIID = "schematic_table";
-    public static final Logger LOGGER = LogUtils.getLogger();
+    public static final String NAME = "Engineered Schematics";
+    public static final Logger LOGGER = LogManager.getLogger(MODID);
+    public static final CreativeTabs CREATIVE_TAB = new CreativeTabs(MODID) {
+        @Override @Nonnull public ItemStack createIcon() { return new ItemStack(ESRegistry.SCHEMATIC_ITEM); }
+    };
+    private static final Map<String, ItemStack> ES_FORMATION_TEMPLATE = new HashMap<>();
+    @SidedProxy(clientSide = "tech.muddykat.engineered_schematics.client.ClientProxy", serverSide = "tech.muddykat.engineered_schematics.common.CommonProxy")
+    public static CommonProxy proxy;
+    @Instance(MODID) public static EngineeredSchematics instance;
 
-    private static final HashMap<ResourceLocation, ItemStack> ES_FORMATION_TEMPLATE = new HashMap<>();
+    @EventHandler public void preInit(FMLPreInitializationEvent event) { proxy.preInit(); }
 
-    public EngineeredSchematics(IEventBus modEventBus, ModContainer modContainer)
-    {
-        LogUtils.getLogger().info("Starting Engineered Schematics");
-
-        // Register the commonSetup method for modloading
-        ESRegistry.register(modEventBus);
-        ESMenuTypes.register(modEventBus);
-        ESRegistry.initialize();
-        modEventBus.addListener(this::addCreative);
-        ESDataComponents.registerComponents();
-        if(FMLLoader.getDist().isClient())
-        {
-            setupCallbacks();
-        }
-    }
-    public static void setupCallbacks()
-    {
-        IEOBJCallbacks.register(rl("schematic_table_block"), SchematicTableCallbacks.INSTANCE);
+    @EventHandler public void init(FMLInitializationEvent event) {
+        NetworkRegistry.INSTANCE.registerGuiHandler(instance, proxy);
+        proxy.init();
     }
 
-    public static ResourceLocation rl(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MODID, path);
-    }
+    @EventHandler public void postInit(FMLPostInitializationEvent event) { proxy.postInit(); }
 
-    public static void setTemplateFormationItem(ResourceLocation id, ItemStack item)
-    {
-        ES_FORMATION_TEMPLATE.replace(id, item);
-    }
+    @EventHandler public void processIMC(FMLInterModComms.IMCEvent event) { IMCReceiver.processIMC(event); }
 
-    public static boolean hasFormationItem(ResourceLocation uniqueName) {
-        return ES_FORMATION_TEMPLATE.containsKey(uniqueName);
-    }
+    public static ResourceLocation rl(String path) { return new ResourceLocation(MODID, path); }
 
-    public static ItemStack getFormationItem(ResourceLocation uniqueName)
-    {
-        return ES_FORMATION_TEMPLATE.get(uniqueName);
-    }
+    public static ResourceLocation makeTextureLocation(String name) { return new ResourceLocation(MODID, "textures/gui/" + name + ".png"); }
 
-    private void addCreative(BuildCreativeModeTabContentsEvent event)
-    {
-        if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS)
-            event.accept(BLOCK_ITEM_SCHEMATIC_TABLE.get());
-    }
+    public static void setTemplateFormationItem(String uniqueName, ItemStack item) { ES_FORMATION_TEMPLATE.put(uniqueName, item); }
 
-    @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD)
-    public static class CommonModEvents
-    {
-        @SubscribeEvent
-        public static void registerContainersAndScreens(RegisterMenuScreensEvent event)
-        {
-            event.register(ESMenuTypes.SCHEMATICS.getType(), SchematicsScreen::new);
-        }
+    public static boolean hasFormationItem(String uniqueName) { return ES_FORMATION_TEMPLATE.containsKey(uniqueName); }
 
-    }
-
-    @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-    public static class ClientModEvents
-    {
-        @SubscribeEvent
-        public static void onClientSetup(FMLClientSetupEvent event)
-        {
-            NeoForge.EVENT_BUS.register(new SchematicPickBlockHandler());
-            setupManualEntries();
-        }
-
-        @SubscribeEvent
-        public static void registerModelLoaders(ModelEvent.RegisterGeometryLoaders event)
-        {
-            CorkboardRenderer.FRAME_EDGE = new ESDynamicModel("frame_edge");
-            CorkboardRenderer.CORNER = new ESDynamicModel("corner");
-            CorkboardRenderer.SCHEMATIC = new ESDynamicModel("schematic");
-        }
-
-        private static <T extends BlockEntity>
-        void registerBERenderNoContext(
-                EntityRenderersEvent.RegisterRenderers event, BlockEntityType<? extends T> type, Supplier<BlockEntityRenderer<T>> render
-        )
-        {
-            event.registerBlockEntityRenderer(type, $ -> render.get());
-        }
-
-
-        @SubscribeEvent
-        public static void registerBERenderer(EntityRenderersEvent.RegisterRenderers event)
-        {
-            registerBERenderNoContext(event, ESRegistry.SCHEMATIC_BOARD_TYPE.get(), CorkboardRenderer::new);
-        }
-
-        private static void setupManualEntries()
-        {
-            ManualInstance instance = ManualHelper.getManual();
-            Tree.InnerNode<ResourceLocation, ManualEntry> parent_category = instance.getRoot().getOrCreateSubnode(ResourceLocation.fromNamespaceAndPath(EngineeredSchematics.MODID, "main"), 99);
-
-            ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(ManualHelper.getManual());
-            builder.readFromFile(ResourceLocation.fromNamespaceAndPath(EngineeredSchematics.MODID, "es"));
-            instance.addEntry(parent_category, builder.create());
-
-            builder.readFromFile(ResourceLocation.fromNamespaceAndPath(EngineeredSchematics.MODID, "schematic_table"));
-            instance.addEntry(parent_category, builder.create());
-
-            builder.readFromFile(ResourceLocation.fromNamespaceAndPath(EngineeredSchematics.MODID, "schematic_item"));
-            instance.addEntry(parent_category, builder.create());
-        }
-    }
-
-    public static ResourceLocation makeTextureLocation(String name) {
-        return ResourceLocation.fromNamespaceAndPath(MODID,"textures/gui/" + name + ".png");
-    }
+    public static ItemStack getFormationItem(String uniqueName) { return ES_FORMATION_TEMPLATE.get(uniqueName); }
 }

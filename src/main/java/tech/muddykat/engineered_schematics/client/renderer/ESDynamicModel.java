@@ -1,55 +1,68 @@
 package tech.muddykat.engineered_schematics.client.renderer;
 
-import blusunrize.immersiveengineering.api.ApiUtils;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.resources.ResourceLocation;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ModelEvent;
-import net.neoforged.neoforge.client.model.data.ModelData;
 import tech.muddykat.engineered_schematics.EngineeredSchematics;
 
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.IBakedModel;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.event.ModelBakeEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
+import net.minecraftforge.client.model.IModel;
+import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
+import net.minecraftforge.common.model.TRSRTransformation;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-@EventBusSubscriber(modid = EngineeredSchematics.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@SideOnly(Side.CLIENT)
+@EventBusSubscriber(value = Side.CLIENT, modid = EngineeredSchematics.MODID)
 public class ESDynamicModel {
-    private static final List<ModelResourceLocation> MODELS = new ArrayList<>();
+    private static final List<ESDynamicModel> MODELS = new ArrayList<>();
+    private final ResourceLocation location;
+    private IModel model;
+    private IBakedModel baked;
 
-    @SubscribeEvent
-    public static void registerModels(ModelEvent.RegisterAdditional ev)
-    {
-        for(ModelResourceLocation model : MODELS)
-            ev.register(model);
+    public ESDynamicModel(String name) {
+        this.location = new ResourceLocation(EngineeredSchematics.MODID, "dynamic/" + name);
+        MODELS.add(this);
     }
 
-    private final ModelResourceLocation name;
-
-    public ESDynamicModel(String desc)
-    {
-        // References a generated json file
-        this.name = ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(EngineeredSchematics.MODID, "dynamic/"+desc));
-        MODELS.add(this.name);
+    @SubscribeEvent public static void stitchTextures(TextureStitchEvent.Pre event) {
+        for (ESDynamicModel model : MODELS) {
+            model.load();
+            if (model.model == null) { continue; }
+            for (ResourceLocation texture : model.model.getTextures()) {
+                event.getMap().registerSprite(texture);
+            }
+        }
     }
 
-    public BakedModel get()
-    {
-        final BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
-        return blockRenderer.getBlockModelShaper().getModelManager().getModel(name);
+    @SubscribeEvent public static void bakeModels(ModelBakeEvent event) {
+        for (ESDynamicModel model : MODELS) {
+            model.load();
+            if (model.model != null) { model.baked = model.model.bake(TRSRTransformation.identity(), DefaultVertexFormats.ITEM, ModelLoader.defaultTextureGetter()); }
+        }
     }
 
-    public List<BakedQuad> getNullQuads(ModelData data)
-    {
-        return get().getQuads(null, null, ApiUtils.RANDOM_SOURCE, data, null);
+    private void load() {
+        if (this.model != null) { return; }
+        try {
+            this.model = ModelLoaderRegistry.getModel(this.location);
+        }
+        catch (Exception exception) {
+            EngineeredSchematics.LOGGER.error("Could not load the dynamic model {}", this.location, exception);
+        }
     }
 
-    public ModelResourceLocation getName()
-    {
-        return name;
+    public List<BakedQuad> getQuads() {
+        if (this.baked == null) { return Collections.emptyList(); }
+        return this.baked.getQuads(null, null, 0L);
     }
 }

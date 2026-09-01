@@ -1,11 +1,17 @@
 package tech.muddykat.engineered_schematics.item;
 
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.level.block.Block;
+import tech.muddykat.engineered_schematics.EngineeredSchematics;
 
-public class CorkboardBlockItem extends BlockItem {
-    public CorkboardBlockItem(Block pBlock) {
-        super(pBlock, new Properties());
+import net.minecraft.block.Block;
+import net.minecraft.item.ItemBlock;
+
+import java.util.Objects;
+
+public class CorkboardBlockItem extends ItemBlock {
+    public CorkboardBlockItem(Block block) {
+        super(block);
+        setRegistryName(Objects.requireNonNull(block.getRegistryName()));
+        setTranslationKey(EngineeredSchematics.MODID + ".corkboard");
+        setCreativeTab(EngineeredSchematics.CREATIVE_TAB);
     }
-
 }

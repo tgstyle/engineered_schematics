@@ -1,27 +1,18 @@
 package tech.muddykat.engineered_schematics.item;
 
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.NotNull;
-import tech.muddykat.engineered_schematics.block.SchematicDeskBlock;
+import tech.muddykat.engineered_schematics.EngineeredSchematics;
 
-public class SchematicTableBlockItem extends BlockItem {
-    public SchematicTableBlockItem(Block pBlock) {
-        super(pBlock, new Properties().stacksTo(1));
-    }
+import net.minecraft.block.Block;
+import net.minecraft.item.ItemBlock;
 
-    @Override
-    protected boolean placeBlock(@NotNull BlockPlaceContext context, @NotNull BlockState state)
-    {
-        Block b = state.getBlock();
-        if(b instanceof SchematicDeskBlock<?> desk)
-        {
-            boolean ret = super.placeBlock(context, state);
-            if(ret) desk.onIEBlockPlacedBy(context, state);
-            return ret;
-        }
-        return super.placeBlock(context, state);
+import java.util.Objects;
+
+public class SchematicTableBlockItem extends ItemBlock {
+    public SchematicTableBlockItem(Block block) {
+        super(block);
+        setRegistryName(Objects.requireNonNull(block.getRegistryName()));
+        setTranslationKey(EngineeredSchematics.MODID + ".schematic_table_block");
+        setMaxStackSize(1);
+        setCreativeTab(EngineeredSchematics.CREATIVE_TAB);
     }
 }

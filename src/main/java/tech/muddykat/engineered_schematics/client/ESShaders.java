@@ -1,44 +1,63 @@
 package tech.muddykat.engineered_schematics.client;
 
-
-import com.mojang.blaze3d.shaders.AbstractUniform;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.resources.ResourceLocation;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RegisterShadersEvent;
 import tech.muddykat.engineered_schematics.EngineeredSchematics;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.shader.ShaderLinkHelper;
+import net.minecraft.client.shader.ShaderManager;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.opengl.GL11;
+
+import javax.annotation.Nullable;
 import java.io.IOException;
 
-@EventBusSubscriber(value = Dist.CLIENT, modid =  EngineeredSchematics.MODID, bus =EventBusSubscriber.Bus.MOD)
+@SideOnly(Side.CLIENT)
 public class ESShaders {
-    private static ShaderInstance shader_schematic;
-    private static AbstractUniform projection_time;
-    private static AbstractUniform color_tint;
+    private static final String PROGRAM = EngineeredSchematics.MODID + ":schematic";
+    private static ShaderManager schematic;
+    private static boolean unavailable;
 
-    public static void setSchematicRenderData(float time, float red, float green, float blue)
-    {
-        ESShaders.projection_time.set(time);
-        ESShaders.color_tint.set(red, green, blue);
+    public static void use(float time, float red, float green, float blue) {
+        ShaderManager shader = getSchematicShader();
+        if (shader == null) { return; }
+        shader.getShaderUniformOrDefault("Time").set(time);
+        shader.getShaderUniformOrDefault("ColorTint").set(red, green, blue);
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        GlStateManager.disableAlpha();
+        GlStateManager.depthFunc(GL11.GL_LESS);
+        shader.useShader();
     }
 
-    @SubscribeEvent
-    public static void registerShaders(RegisterShadersEvent event) throws IOException
-    {
-        ShaderInstance instance = new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath(EngineeredSchematics.MODID,"rendertype_schematic"), DefaultVertexFormat.POSITION_TEX_COLOR);
-
-        event.registerShader(instance,  s -> {
-            shader_schematic = s;
-            projection_time = shader_schematic.safeGetUniform("Time");
-            color_tint = shader_schematic.safeGetUniform("ColorTint");
-        });
+    public static void end() {
+        if (schematic == null) { return; }
+        schematic.endShader();
+        GlStateManager.depthFunc(GL11.GL_LEQUAL);
+        GlStateManager.enableAlpha();
+        GlStateManager.disableBlend();
     }
 
-    public static ShaderInstance getSchematicShader()
-    {
-        return shader_schematic;
+    @Nullable
+    @SuppressWarnings("ConstantConditions")
+    public static ShaderManager getSchematicShader() {
+        if (schematic != null || unavailable) { return schematic; }
+        if (!OpenGlHelper.areShadersSupported()) {
+            unavailable = true;
+            EngineeredSchematics.LOGGER.warn("Shaders are not supported, the schematic projection will not be tinted");
+            return null;
+        }
+        if (ShaderLinkHelper.getStaticShaderLinkHelper() == null) { ShaderLinkHelper.setNewStaticShaderLinkHelper(); }
+        try {
+            schematic = new ShaderManager(Minecraft.getMinecraft().getResourceManager(), PROGRAM);
+            schematic.addSamplerTexture("Sampler0", Minecraft.getMinecraft().getTextureMapBlocks());
+        }
+        catch (IOException exception) {
+            unavailable = true;
+            EngineeredSchematics.LOGGER.error("Could not load the schematic shader program " + PROGRAM, exception);
+        }
+        return schematic;
     }
 }

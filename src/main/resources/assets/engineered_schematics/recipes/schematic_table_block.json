@@ -1,0 +1,14 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"group": "engineered_schematics",
+	"pattern": [
+		"SSS",
+		"C F"
+	],
+	"key": {
+		"S": { "type": "forge:ore_dict", "ore": "slabTreatedWood" },
+		"C": { "item": "minecraft:crafting_table" },
+		"F": { "type": "forge:ore_dict", "ore": "fenceSteel" }
+	},
+	"result": { "item": "engineered_schematics:schematic_table_block" }
+}

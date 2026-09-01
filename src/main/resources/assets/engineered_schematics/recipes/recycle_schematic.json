@@ -1,0 +1,9 @@
+{
+	"type": "minecraft:crafting_shapeless",
+	"group": "engineered_schematics",
+	"ingredients": [
+		{ "item": "engineered_schematics:multiblock_schematic" },
+		{ "type": "forge:ore_dict", "ore": "dyeWhite" }
+	],
+	"result": { "item": "minecraft:paper" }
+}

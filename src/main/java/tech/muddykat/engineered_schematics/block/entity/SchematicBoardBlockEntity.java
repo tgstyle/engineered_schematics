@@ -1,322 +1,188 @@
 package tech.muddykat.engineered_schematics.block.entity;
 
-import blusunrize.immersiveengineering.api.IEProperties;
-import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
-import blusunrize.immersiveengineering.common.blocks.PlacementLimitation;
-import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.ContainerHelper;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraft.world.level.storage.loot.LootContext;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
-import org.jetbrains.annotations.Nullable;
-import tech.muddykat.engineered_schematics.client.renderer.BorderState;
+import tech.muddykat.engineered_schematics.block.SchematicCorkboardBlock;
+import tech.muddykat.engineered_schematics.helper.BorderState;
 import tech.muddykat.engineered_schematics.item.SchematicItem;
-import tech.muddykat.engineered_schematics.registry.ESRegistry;
 
-import java.util.*;
-import java.util.function.Consumer;
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IBlockOverlayText;
+import blusunrize.immersiveengineering.common.blocks.TileEntityIEBase;
+import blusunrize.immersiveengineering.common.util.Utils;
+import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class SchematicBoardBlockEntity
-        extends IEBaseBlockEntity implements IIEInventory, IEBlockInterfaces.IBlockEntityDrop,
-        IEBlockInterfaces.IStateBasedDirectional, IEBlockInterfaces.IBlockOverlayText
-{
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+public class SchematicBoardBlockEntity extends TileEntityIEBase implements IIEInventory, IBlockOverlayText {
     public static final int NUM_SLOTS = 4;
-
-    BorderState borderState = new BorderState();
-
     private final NonNullList<ItemStack> inventory = NonNullList.withSize(NUM_SLOTS, ItemStack.EMPTY);
+    private final BorderState borderState = new BorderState();
+    private final Map<EnumFacing, Boolean> adjacentBlocks = new EnumMap<>(EnumFacing.class);
+    private final Map<BlockPos, Boolean> diagonalBlocks = new HashMap<>();
+    private final List<Float> randomStates = new ArrayList<>(8);
 
-    public SchematicBoardBlockEntity(BlockPos pos, BlockState state)
-    {
-        super(ESRegistry.SCHEMATIC_BOARD_TYPE.get(), pos, state);
-        rand = new Random(getBlockPos().asLong());
-        while(randomStates.size() < 8) randomStates.add(rand.nextFloat());
+    @Override public void readCustomNBT(NBTTagCompound nbt, boolean descPacket) {
+        this.inventory.clear();
+        NonNullList<ItemStack> read = Utils.readInventory(nbt.getTagList("inventory", 10), NUM_SLOTS);
+        for (int i = 0; i < NUM_SLOTS; i++) {
+            this.inventory.set(i, read.get(i));
+        }
+        this.borderState.updateFromNBT(nbt);
     }
 
-    @Override
-    public Property<Direction> getFacingProperty()
-    {
-        return IEProperties.FACING_HORIZONTAL;
+    @Override public void writeCustomNBT(NBTTagCompound nbt, boolean descPacket) {
+        nbt.setTag("inventory", Utils.writeInventory(this.inventory));
+        this.borderState.writeToNBT(nbt);
     }
 
-    @Override
-    public PlacementLimitation getFacingLimitation()
-    {
-        return PlacementLimitation.HORIZONTAL_AXIS;
-    }
+    @Override public NonNullList<ItemStack> getInventory() { return this.inventory; }
 
-    @Override
-    public boolean mirrorFacingOnPlacement(LivingEntity placer)
-    {
-        return placer.isShiftKeyDown();
-    }
+    @Override public boolean isStackValid(int slot, ItemStack stack) { return !stack.isEmpty() && stack.getItem() instanceof SchematicItem; }
 
-    @Override
-    protected void saveAdditional(CompoundTag nbt, HolderLookup.Provider provider) {
-        super.saveAdditional(nbt, provider);
-        borderState.writeToNBT(nbt);
-    }
+    @Override public int getSlotLimit(int slot) { return 1; }
 
-    @Override
-    public void loadAdditional(CompoundTag nbt, HolderLookup.Provider provider) {
-        super.loadAdditional(nbt, provider);
-        borderState.updateFromNBT(nbt);
-    }
-
-    @Override
-    public void readCustomNBT(CompoundTag nbt, boolean descPacket, HolderLookup.Provider provider)
-    {
-        ContainerHelper.loadAllItems(nbt, inventory, provider);
-        borderState.updateFromNBT(nbt);
-    }
-
-    @Override
-    public void writeCustomNBT(CompoundTag nbt, boolean descPacket, HolderLookup.Provider provider) {
-        ContainerHelper.saveAllItems(nbt, inventory, provider);
-        borderState.writeToNBT(nbt);
-    }
-
-    @Override
-    public void getBlockEntityDrop(LootContext context, Consumer<ItemStack> drop)
-    {
-
-    }
-
-    @Override
-    public void onBEPlaced(BlockPlaceContext ctx)
-    {
-    }
-
-    @Override
-    public NonNullList<ItemStack> getInventory()
-    {
-        return inventory;
-    }
-
-    @Override
-    public boolean isStackValid(int slot, ItemStack stack)
-    {
-        return stack.getItem() instanceof SchematicItem;
-    }
-
-    @Override
-    public int getSlotLimit(int slot)
-    {
-        return 1;
-    }
-
-    @Override
-    public void doGraphicalUpdates()
-    {
-        this.setChanged();
+    @Override public void doGraphicalUpdates(int slot) {
+        markDirty();
         markContainingBlockForUpdate(null);
     }
 
-    public static int getTargetedSlot(Direction side, float hitX, float hitY, float hitZ)
-    {
-        float targetU = side==Direction.NORTH ? (1-hitX) : (side==Direction.SOUTH ? (hitX) : (side==Direction.EAST ? 1-hitZ : (hitZ)));
-        float targetV = side==Direction.UP?1-hitZ: 1-hitY;
-        return targetU < 0.5 ? (targetV < 0.5 ? 0 : 2) : ((targetV < 0.5 ? 1 : 3));
+    public EnumFacing getFacing() { return SchematicCorkboardBlock.facingOf(world, pos); }
+
+    public BorderState getBorderState() { return this.borderState; }
+
+    public List<Float> getRandomState() {
+        if (this.randomStates.isEmpty()) {
+            Random rand = new Random(this.pos.toLong());
+            while (this.randomStates.size() < 8) {
+                this.randomStates.add(rand.nextFloat());
+            }
+        }
+        return this.randomStates;
     }
 
-    public InteractionResult interact(Direction side, Player player, InteractionHand hand, ItemStack heldItem, float hitX, float hitY, float hitZ)
-    {
-        int targetedSlot = getTargetedSlot(side, hitX, hitY, hitZ);
-        ItemStack stackInSlot = this.inventory.get(targetedSlot);
-        if(!stackInSlot.isEmpty())
-        {
-            if(heldItem.isEmpty())
-                player.setItemInHand(hand, stackInSlot);
-            else if(!getLevelNonnull().isClientSide())
-                player.spawnAtLocation(stackInSlot, 0);
-            this.inventory.set(targetedSlot, ItemStack.EMPTY);
-            return InteractionResult.sidedSuccess(getLevelNonnull().isClientSide);
+    public static int getTargetedSlot(EnumFacing side, float hitX, float hitY, float hitZ) {
+        float targetU = side == EnumFacing.NORTH ? (1 - hitX) : (side == EnumFacing.SOUTH ? hitX : (side == EnumFacing.EAST ? 1 - hitZ : hitZ));
+        float targetV = side == EnumFacing.UP ? 1 - hitZ : 1 - hitY;
+        return targetU < 0.5F ? (targetV < 0.5F ? 0 : 2) : (targetV < 0.5F ? 1 : 3);
+    }
+
+    public boolean interact(EnumFacing side, EntityPlayer player, EnumHand hand, ItemStack heldItem, float hitX, float hitY, float hitZ) {
+        int slot = getTargetedSlot(side, hitX, hitY, hitZ);
+        ItemStack stackInSlot = this.inventory.get(slot);
+        if (!stackInSlot.isEmpty()) {
+            if (heldItem.isEmpty()) { player.setHeldItem(hand, stackInSlot); }
+            else if (!world.isRemote) { player.dropItem(stackInSlot, false); }
+            this.inventory.set(slot, ItemStack.EMPTY);
+            doGraphicalUpdates(slot);
+            return true;
         }
-        else if(isStackValid(targetedSlot, heldItem))
-        {
-            this.inventory.set(targetedSlot, heldItem.copyWithCount(1));
+        if (isStackValid(slot, heldItem)) {
+            ItemStack pinned = heldItem.copy();
+            pinned.setCount(1);
+            this.inventory.set(slot, pinned);
             heldItem.shrink(1);
-            return InteractionResult.sidedSuccess(getLevelNonnull().isClientSide);
+            doGraphicalUpdates(slot);
+            return true;
         }
-        markChunkDirty();
-        markBlockForUpdate(getBlockPos(), getBlockState());
-        return InteractionResult.FAIL;
-    }
-
-    @Nullable
-    @Override
-    public Component[] getOverlayText(Player player, HitResult mop, boolean hammer)
-    {
-        if(mop instanceof BlockHitResult bhr)
-        {
-            final float hitX = (float)bhr.getLocation().x-bhr.getBlockPos().getX();
-            final float hitY = (float)bhr.getLocation().y-bhr.getBlockPos().getY();
-            final float hitZ = (float)bhr.getLocation().z-bhr.getBlockPos().getZ();
-            int targetedSlot = getTargetedSlot(bhr.getDirection(), hitX, hitY, hitZ);
-            ItemStack stackInSlot = this.inventory.get(targetedSlot);
-            if(stackInSlot.isEmpty()) return new Component[]{Component.empty()};
-            return new Component[]{stackInSlot.getHoverName()};
-        }
-        return null;
-    }
-
-    @Override
-    public boolean useNixieFont(Player player, HitResult hitResult) {
         return false;
     }
 
-    // Cached map of adjacent blocks of the same type
-    private final Map<Direction, Boolean> adjacentBlocks = new EnumMap<>(Direction.class);
-
-    // Cached map of diagonal blocks (position -> hasSameBlock)
-    private final Map<BlockPos, Boolean> diagonalBlocks = new HashMap<>();
-
-    private boolean isSameBlockType(BlockPos pos) {
-        assert level != null;
-        BlockEntity blockEntity = level.getBlockEntity(pos);
-        return blockEntity instanceof SchematicBoardBlockEntity;
+    @Override @Nonnull public String[] getOverlayText(@Nonnull EntityPlayer player, @Nonnull RayTraceResult mop, boolean hammer) {
+        BlockPos hit = mop.getBlockPos();
+        float hitX = (float)(mop.hitVec.x - hit.getX());
+        float hitY = (float)(mop.hitVec.y - hit.getY());
+        float hitZ = (float)(mop.hitVec.z - hit.getZ());
+        ItemStack stackInSlot = this.inventory.get(getTargetedSlot(mop.sideHit, hitX, hitY, hitZ));
+        if (stackInSlot.isEmpty()) { return new String[0]; }
+        return new String[]{stackInSlot.getDisplayName()};
     }
 
+    @Override public boolean useNixieFont(@Nonnull EntityPlayer player, @Nonnull RayTraceResult mop) { return false; }
+
+    private boolean isSameBlockType(BlockPos other) { return world.getTileEntity(other) instanceof SchematicBoardBlockEntity; }
+
     public void refreshAdjacentBlocks() {
-        Direction facing = getFacing();
-
-        // Check all six directions for direct adjacency
-        for (Direction dir : Direction.values()) {
-            BlockPos adjacentPos = worldPosition.relative(dir);
-            boolean hasSameBlock = isSameBlockType(adjacentPos);
-            adjacentBlocks.put(dir, hasSameBlock);
-
-            // Update edge visibility (edge is visible when no adjacent block)
-            borderState.updateEdge(dir, !hasSameBlock, facing);
+        EnumFacing facing = getFacing();
+        for (EnumFacing dir : EnumFacing.values()) {
+            boolean hasSameBlock = isSameBlockType(this.pos.offset(dir));
+            this.adjacentBlocks.put(dir, hasSameBlock);
+            this.borderState.updateEdge(dir, !hasSameBlock, facing);
         }
-
-        // Check diagonal positions
         updateDiagonalBlocks();
-
-        // Update corners based on adjacent and diagonal blocks
-        borderState.updateCorners(adjacentBlocks, diagonalBlocks, facing, worldPosition);
-
-        // Mark block for update to refresh rendering
-        markBlockForUpdate(worldPosition, getBlockState());
+        this.borderState.updateCorners(this.adjacentBlocks, this.diagonalBlocks, facing, this.pos);
+        markContainingBlockForUpdate(null);
     }
 
     private void updateDiagonalBlocks() {
-        Direction facing = getFacing();
-        diagonalBlocks.clear();
-
-        // Check the four diagonal positions (top-left, top-right, bottom-right, bottom-left)
-        checkAndCacheDiagonal(Direction.UP, facing.getClockWise());        // Top-right
-        checkAndCacheDiagonal(Direction.UP, facing.getCounterClockWise());  // Top-left
-        checkAndCacheDiagonal(Direction.DOWN, facing.getClockWise());      // Bottom-right
-        checkAndCacheDiagonal(Direction.DOWN, facing.getCounterClockWise());// Bottom-left
+        EnumFacing facing = getFacing();
+        this.diagonalBlocks.clear();
+        cacheDiagonal(EnumFacing.UP, facing.rotateY());
+        cacheDiagonal(EnumFacing.UP, facing.rotateYCCW());
+        cacheDiagonal(EnumFacing.DOWN, facing.rotateY());
+        cacheDiagonal(EnumFacing.DOWN, facing.rotateYCCW());
     }
 
-    private void checkAndCacheDiagonal(Direction dir1, Direction dir2) {
-        BlockPos diagonalPos = worldPosition.relative(dir1).relative(dir2);
-        boolean hasSameBlock = isSameBlockType(diagonalPos);
-        diagonalBlocks.put(diagonalPos, hasSameBlock);
+    private void cacheDiagonal(EnumFacing first, EnumFacing second) {
+        BlockPos diagonal = this.pos.offset(first).offset(second);
+        this.diagonalBlocks.put(diagonal, isSameBlockType(diagonal));
     }
 
     public void updateEdges(BlockPos neighborPos) {
-        // Calculate if this is a direct neighbor or a diagonal neighbor
-        BlockPos delta = neighborPos.subtract(worldPosition);
+        BlockPos delta = neighborPos.subtract(this.pos);
         int manhattan = Math.abs(delta.getX()) + Math.abs(delta.getY()) + Math.abs(delta.getZ());
-
-        // For direct neighbors (manhattan distance = 1)
         if (manhattan == 1) {
-            Direction side = Direction.getNearest(delta.getX(), delta.getY(), delta.getZ());
-
-            // Update our cached state for this direction
-            boolean hasSameBlock = isSameBlockType(neighborPos);
-            adjacentBlocks.put(side, hasSameBlock);
-
-            // Update the corresponding edge
-            borderState.updateEdge(side, !hasSameBlock, getFacing());
-
-            // Need to update diagonal info as well since the neighbor changed
+            EnumFacing side = EnumFacing.getFacingFromVector(delta.getX(), delta.getY(), delta.getZ());
+            this.adjacentBlocks.put(side, isSameBlockType(neighborPos));
+            this.borderState.updateEdge(side, !isSameBlockType(neighborPos), getFacing());
             updateDiagonalBlocks();
-
-            // Update corners based on new information
-            borderState.updateCorners(adjacentBlocks, diagonalBlocks, getFacing(), worldPosition);
-
-            // Refresh the block visually
-            markBlockForUpdate(worldPosition, getBlockState());
-
-            // Also notify diagonal and adjacent neighbors to update their corners
+            this.borderState.updateCorners(this.adjacentBlocks, this.diagonalBlocks, getFacing(), this.pos);
+            markContainingBlockForUpdate(null);
             notifyNeighborsToUpdate();
         }
-        // For diagonal neighbors (manhattan distance = 2)
-        else if (manhattan == 2 && delta.getZ() == 0) {
-            // A diagonal neighbor changed, need to update our corners
+        else if (manhattan == 2) {
             updateDiagonalBlocks();
-            borderState.updateCorners(adjacentBlocks, diagonalBlocks, getFacing(), worldPosition);
-
-            // Refresh the block visually
-            markBlockForUpdate(worldPosition, getBlockState());
+            this.borderState.updateCorners(this.adjacentBlocks, this.diagonalBlocks, getFacing(), this.pos);
+            markContainingBlockForUpdate(null);
         }
     }
+
     private void notifyNeighborsToUpdate() {
-        for (Direction dir : Direction.values()) {
-            BlockPos adjacentPos = worldPosition.relative(dir);
-            BlockEntity blockEntity = level.getBlockEntity(adjacentPos);
-
-            if (blockEntity instanceof SchematicBoardBlockEntity board) {
-                board.refreshAdjacentBlocks();
-            }
+        for (EnumFacing dir : EnumFacing.values()) {
+            notifyBoard(this.pos.offset(dir));
         }
     }
-    private static Random rand;
+
+    private void notifyBoard(BlockPos other) {
+        TileEntity te = world.getTileEntity(other);
+        if (te instanceof SchematicBoardBlockEntity) { ((SchematicBoardBlockEntity)te).refreshAdjacentBlocks(); }
+    }
+
     public void onInitialPlace() {
-        if(randomStates.isEmpty()) {
-            rand = new Random(getBlockPos().asLong());
-            while(randomStates.size() < 8) randomStates.add(rand.nextFloat());
-        }
-        // Refresh our own borders
+        getRandomState();
         refreshAdjacentBlocks();
-
-        // Notify all adjacent and diagonal blocks to update their borders
         notifyNeighborsToUpdate();
-
-        // Also check diagonals and notify them
-        Direction facing = getFacing();
-        notifyDiagonalNeighbor(Direction.UP, facing.getClockWise());        // Top-right
-        notifyDiagonalNeighbor(Direction.UP, facing.getCounterClockWise());  // Top-left
-        notifyDiagonalNeighbor(Direction.DOWN, facing.getClockWise());      // Bottom-right
-        notifyDiagonalNeighbor(Direction.DOWN, facing.getCounterClockWise());// Bottom-left
+        EnumFacing facing = getFacing();
+        notifyBoard(this.pos.up().offset(facing.rotateY()));
+        notifyBoard(this.pos.up().offset(facing.rotateYCCW()));
+        notifyBoard(this.pos.down().offset(facing.rotateY()));
+        notifyBoard(this.pos.down().offset(facing.rotateYCCW()));
     }
 
-    private void notifyDiagonalNeighbor(Direction dir1, Direction dir2) {
-        BlockPos diagonalPos = worldPosition.relative(dir1).relative(dir2);
-        BlockEntity blockEntity = level.getBlockEntity(diagonalPos);
-
-        if (blockEntity instanceof SchematicBoardBlockEntity board) {
-            board.refreshAdjacentBlocks();
-        }
-    }
-
-    // Provide access to border state for rendering
-    public BorderState getBorderState() {
-        return borderState;
-    }
-
-    List<Float> randomStates = new ArrayList<>(8);
-    public List<Float> getRandomState() {
-        return randomStates;
-    }
+    @SideOnly(Side.CLIENT)
+    @Override @Nonnull public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() { return new net.minecraft.util.math.AxisAlignedBB(pos, pos.add(1, 1, 1)); }
 }

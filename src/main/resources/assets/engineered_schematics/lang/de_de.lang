@@ -1,0 +1,22 @@
+#Multiblock names, sourced from Immersive Engineering's own block names
+desc.engineered_schematics.multiblock.IE:CokeOven=Kokerei
+desc.engineered_schematics.multiblock.IE:AlloySmelter=Legierungsofen
+desc.engineered_schematics.multiblock.IE:BlastFurnace=Grober Hochofen
+desc.engineered_schematics.multiblock.IE:BlastFurnaceAdvanced=Verbesserter Hochofen
+desc.engineered_schematics.multiblock.IE:MetalPress=Metallpresse
+desc.engineered_schematics.multiblock.IE:Crusher=Brecher
+desc.engineered_schematics.multiblock.IE:SheetmetalTank=Flüssigkeitstank
+desc.engineered_schematics.multiblock.IE:Silo=Gegenstandssilo
+desc.engineered_schematics.multiblock.IE:Assembler=Bauer
+desc.engineered_schematics.multiblock.IE:AutoWorkbench=Automatisierte Ingenieurswerkbank
+desc.engineered_schematics.multiblock.IE:BottlingMachine=Befüllungsaschine
+desc.engineered_schematics.multiblock.IE:Squeezer=Industrieller Auspresser
+desc.engineered_schematics.multiblock.IE:Fermenter=Industrieller Fermentierer
+desc.engineered_schematics.multiblock.IE:Refinery=Raffinerie
+desc.engineered_schematics.multiblock.IE:DieselGenerator=Dieselgenerator
+desc.engineered_schematics.multiblock.IE:Excavator=Bagger
+desc.engineered_schematics.multiblock.IE:BucketWheel=Schaufelrad
+desc.engineered_schematics.multiblock.IE:ArcFurnace=Lichtbogenofen
+desc.engineered_schematics.multiblock.IE:Lightningrod=Blitzableiter
+desc.engineered_schematics.multiblock.IE:Mixer=Mixer
+desc.engineered_schematics.multiblock.IE:Feedthrough=Durchgangsisolator

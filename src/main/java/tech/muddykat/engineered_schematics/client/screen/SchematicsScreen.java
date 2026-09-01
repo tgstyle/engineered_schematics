@@ -1,340 +1,270 @@
 package tech.muddykat.engineered_schematics.client.screen;
 
-import blusunrize.immersiveengineering.api.multiblocks.ClientMultiblocks;
-import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
-import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
-import blusunrize.immersiveengineering.client.gui.elements.GuiButtonCheckbox;
-import blusunrize.immersiveengineering.client.gui.elements.GuiButtonState;
-import blusunrize.immersiveengineering.client.gui.info.InfoArea;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.math.Transformation;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
-import net.neoforged.neoforge.client.gui.widget.ScrollPanel;
-import org.jetbrains.annotations.NotNull;
-import org.joml.Quaternionf;
 import tech.muddykat.engineered_schematics.EngineeredSchematics;
-import tech.muddykat.engineered_schematics.block.entity.SchematicTableBlockEntity;
+import tech.muddykat.engineered_schematics.helper.SchematicBlockAccess;
+import tech.muddykat.engineered_schematics.item.SchematicProjection;
 import tech.muddykat.engineered_schematics.menu.SchematicsContainerMenu;
+import tech.muddykat.engineered_schematics.util.ESLang;
+import tech.muddykat.engineered_schematics.util.ESConveyors;
+import tech.muddykat.engineered_schematics.util.ESMultiblocks;
 
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
+import blusunrize.immersiveengineering.ImmersiveEngineering;
+import blusunrize.immersiveengineering.api.MultiblockHandler;
+import blusunrize.immersiveengineering.api.tool.ConveyorHandler;
+import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.BlockRendererDispatcher;
+import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
+
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
-import java.util.function.Function;
+import java.util.Map;
 
-public class SchematicsScreen extends IEContainerScreen<SchematicsContainerMenu>
-{
+@SideOnly(Side.CLIENT)
+public class SchematicsScreen extends GuiContainer {
     private static final ResourceLocation TEXTURE = EngineeredSchematics.makeTextureLocation("schematic_gui");
     private static final int MAX_DISPLAY_WIDTH = 80;
     private static final int TEXT_COLOR = 0x666666;
+    private static final int LIST_LEFT = 9;
+    private static final int LIST_TOP = 20;
+    private static final int LIST_WIDTH = 110;
+    private static final int LIST_HEIGHT = 92;
+    private static final int ENTRY_HEIGHT = 21;
+    private static final float PREVIEW_DEPTH = 100.0F;
+    private static final EnumFacing CONVEYOR_FACING = EnumFacing.EAST;
+    private static final Map<String, Map<Integer, EnumFacing>> CONVEYOR_FACINGS = conveyorFacings();
+    private static final float FORMED_SCALE = 0.75F;
+    private static final float BLOCK_ROTATION = 180.0F;
+    private static final Map<String, Float> FORMED_SCALES = formedScales();
+    private static final float[] FORMED_SHIFT_DEFAULT = {0.0F, 0.0F};
+    private static final Map<String, float[]> FORMED_SHIFTS = formedShifts();
+    private static final float[] PREVIEW_SHIFT_DEFAULT = {0.0F, 0.0F};
+    private static final Map<String, float[]> PREVIEW_SHIFTS = previewShifts();
+    private final SchematicsContainerMenu menu;
+    private int scroll;
 
-    private GuiButtonCheckbox mirrorSchematicBtn;
-    private SchematicScrollPanel selectionPanel;
-    private float scrollAmount;
-
-    public SchematicsScreen(SchematicsContainerMenu menu, Inventory playerInventory, Component title) {
-        super(menu, playerInventory, title, TEXTURE);
-        this.imageHeight = 218;
-        this.imageWidth = 230;
+    public SchematicsScreen(SchematicsContainerMenu menu) {
+        super(menu);
+        this.menu = menu;
+        this.xSize = 230;
+        this.ySize = 218;
     }
 
-    @Override
-    protected void init() {
-        super.init();
-
-        // Initialize label positions
-        this.titleLabelY = 9;
-        this.titleLabelX = 14;
-        this.inventoryLabelX = 36;
-        this.inventoryLabelY = 125;
-
-        initMirrorButton();
-        initSelectionPanel();
+    @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        drawDefaultBackground();
+        super.drawScreen(mouseX, mouseY, partialTicks);
+        renderHoveredToolTip(mouseX, mouseY);
     }
 
-    private void initMirrorButton() {
-        this.mirrorSchematicBtn = this.addRenderableWidget(
-                new GuiButtonCheckbox(
-                        leftPos + 129,
-                        topPos + 112,
-                        Component.translatable("engineered_schematics.gui.schematic_table.mirror"),
-                        () -> menu.isMirroredSchematic,
-                        this::handleMirrorButton
-                )
-        );
+    @Override protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+        this.fontRenderer.drawString(ESLang.translate("desc.engineered_schematics.schematic_table"), 14, 9, TEXT_COLOR);
+        this.fontRenderer.drawString(this.mc.player.inventory.getDisplayName().getUnformattedText(), 36, 125, TEXT_COLOR);
+        this.fontRenderer.drawString(ESLang.translate("engineered_schematics.gui.schematic_table.mirror"), 143, 117, this.menu.isMirrored() ? 0x00AA00 : TEXT_COLOR);
     }
 
-    private void handleMirrorButton(GuiButtonState<Boolean> btn) {
-        CompoundTag tag = new CompoundTag();
-        tag.putBoolean("mirrored", !btn.getState());
-        handleMirrorButtonClick(tag);
+    @Override protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        this.mc.getTextureManager().bindTexture(TEXTURE);
+        drawTexturedModalRect(this.guiLeft, this.guiTop, 0, 0, this.xSize, this.ySize);
+        drawSchematicList(mouseX, mouseY);
+        List<MultiblockHandler.IMultiblock> multiblocks = this.menu.getAvailableMultiblocks();
+        if (multiblocks.isEmpty()) { return; }
+        MultiblockHandler.IMultiblock selected = multiblocks.get(this.menu.getSelectedSchematic());
+        drawMultiblockName(selected);
+        drawMultiblockPreview(selected);
     }
 
-    private void initSelectionPanel() {
-        this.selectionPanel = this.addRenderableWidget(
-                new SchematicScrollPanel(
-                        minecraft,
-                        110,
-                        92,
-                        topPos + 20,
-                        leftPos + 9,
-                        menu.availableMultiblocks,
-                        this::handleSchematicSelection,
-                        (index) -> index == menu.selected_schematic,
-                        (amount) -> {
-                            scrollAmount = amount;
-                            return true;
-                        }
-                )
-        );
-
-        this.selectionPanel.setScrollAmount(scrollAmount);
+    private void drawSchematicList(int mouseX, int mouseY) {
+        List<MultiblockHandler.IMultiblock> multiblocks = this.menu.getAvailableMultiblocks();
+        FontRenderer font = this.fontRenderer;
+        int left = this.guiLeft + LIST_LEFT;
+        int top = this.guiTop + LIST_TOP;
+        for (int i = 0; i < multiblocks.size(); i++) {
+            int entryTop = top + i * ENTRY_HEIGHT - this.scroll;
+            if (!isEntryVisible(entryTop, top)) { continue; }
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            this.mc.getTextureManager().bindTexture(TEXTURE);
+            drawTexturedModalRect(left, entryTop, 1, 219, 104, 20);
+            boolean hover = mouseX >= left && mouseX < left + LIST_WIDTH && mouseY >= entryTop && mouseY < entryTop + ENTRY_HEIGHT - 1;
+            int color = i == this.menu.getSelectedSchematic() ? 0xFFFFFF : (hover ? 0xAAFFAA : TEXT_COLOR);
+            String name = ESMultiblocks.getDisplayName(multiblocks.get(i));
+            float scale = scaleFor(font, name);
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(left + 10, entryTop + 6, 0);
+            GlStateManager.scale(scale, scale, scale);
+            font.drawString(name, 0, 0, color);
+            GlStateManager.popMatrix();
+        }
     }
 
-    private boolean handleSchematicSelection(int index) {
-        this.minecraft.tell(() -> menu.jumpToSchematic(index));
-
-        CompoundTag nbt = new CompoundTag();
-        nbt.putInt("index", index);
-        sendUpdateToServer(nbt);
-
-        return true;
+    private void drawMultiblockName(MultiblockHandler.IMultiblock multiblock) {
+        String name = ESMultiblocks.getDisplayName(multiblock);
+        float scale = scaleFor(this.fontRenderer, name);
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(this.guiLeft + 174.5F, this.guiTop + 12.0F, 0.0F);
+        GlStateManager.scale(scale, scale, scale);
+        this.fontRenderer.drawString(name, -this.fontRenderer.getStringWidth(name) / 2, 0, TEXT_COLOR);
+        GlStateManager.popMatrix();
     }
 
-    @Override
-    protected void drawBackgroundTexture(GuiGraphics graphics) {
-        // Draw base texture
-        graphics.blit(TEXTURE, leftPos, topPos, 0, 0, imageWidth, imageHeight);
+    private float scaleFor(FontRenderer font, String text) {
+        float width = font.getStringWidth(text);
+        return width > MAX_DISPLAY_WIDTH ? MAX_DISPLAY_WIDTH / width : 1.0F;
+    }
 
-        // Return early if no multiblocks available
-        if (menu.availableMultiblocks.isEmpty()) {
+    private static Map<String, Map<Integer, EnumFacing>> conveyorFacings() {
+        Map<String, Map<Integer, EnumFacing>> facings = new HashMap<>();
+        Map<Integer, EnumFacing> metalPress = new HashMap<>();
+        metalPress.put(3, EnumFacing.SOUTH);
+        metalPress.put(5, EnumFacing.SOUTH);
+        facings.put("IE:MetalPress", metalPress);
+        Map<Integer, EnumFacing> assembler = new HashMap<>();
+        assembler.put(10, EnumFacing.SOUTH);
+        assembler.put(16, EnumFacing.SOUTH);
+        facings.put("IE:Assembler", assembler);
+        Map<Integer, EnumFacing> autoWorkbench = new HashMap<>();
+        autoWorkbench.put(13, EnumFacing.EAST);
+        autoWorkbench.put(14, EnumFacing.EAST);
+        autoWorkbench.put(15, EnumFacing.EAST);
+        autoWorkbench.put(16, EnumFacing.NORTH);
+        facings.put("IE:AutoWorkbench", autoWorkbench);
+        return facings;
+    }
+
+    private static EnumFacing conveyorFacing(MultiblockHandler.IMultiblock multiblock, int index) {
+        Map<Integer, EnumFacing> facings = CONVEYOR_FACINGS.get(multiblock.getUniqueName());
+        return facings == null ? CONVEYOR_FACING : facings.getOrDefault(index, CONVEYOR_FACING);
+    }
+
+    private static boolean isEntryVisible(int entryTop, int top) { return entryTop >= top && entryTop + ENTRY_HEIGHT <= top + LIST_HEIGHT; }
+
+    private static Map<String, Float> formedScales() {
+        Map<String, Float> scales = new HashMap<>();
+        scales.put("IE:ArcFurnace", 0.75F);
+        return scales;
+    }
+
+    private static Map<String, float[]> formedShifts() {
+        Map<String, float[]> shifts = new HashMap<>();
+        shifts.put("IE:BottlingMachine", new float[]{-1.0F, 0.0F});
+        return shifts;
+    }
+
+    private static Map<String, float[]> previewShifts() {
+        Map<String, float[]> shifts = new HashMap<>();
+        shifts.put("IE:CokeOven", new float[]{1.0F, 0.0F});
+        shifts.put("IE:BlastFurnace", new float[]{1.0F, 0.0F});
+        return shifts;
+    }
+
+    private void drawMultiblockPreview(MultiblockHandler.IMultiblock multiblock) {
+        SchematicProjection projection = new SchematicProjection(multiblock);
+        if (projection.getBlockCount() == 0) { return; }
+        SchematicBlockAccess access = new SchematicBlockAccess(projection);
+        Vec3i size = projection.getSize();
+        float maxDimension = Math.max(size.getY(), Math.max(size.getX(), size.getZ()));
+        boolean formed = multiblock.canRenderFormedStructure();
+        float scale = multiblock.getManualScale() * (formed ? FORMED_SCALE * FORMED_SCALES.getOrDefault(multiblock.getUniqueName(), 1.0F) : 0.65F);
+        BlockRendererDispatcher dispatcher = this.mc.getBlockRendererDispatcher();
+        GlStateManager.pushMatrix();
+        GlStateManager.enableRescaleNormal();
+        GlStateManager.enableDepth();
+        GlStateManager.translate(this.guiLeft + 174.5F, this.guiTop + 54.5F, PREVIEW_DEPTH + maxDimension);
+        GlStateManager.scale(scale, -scale, 1.0F);
+        GlStateManager.rotate(25.0F, 1.0F, 0.0F, 0.0F);
+        GlStateManager.rotate(45.0F, 0.0F, 1.0F, 0.0F);
+        if (formed) {
+            float[] shift = FORMED_SHIFTS.getOrDefault(multiblock.getUniqueName(), FORMED_SHIFT_DEFAULT);
+            GlStateManager.translate(size.getZ() / -2.0F + shift[0], size.getY() / -2.0F - shift[1], size.getX() / -2.0F);
+        }
+        else {
+            float[] shift = PREVIEW_SHIFTS.getOrDefault(multiblock.getUniqueName(), PREVIEW_SHIFT_DEFAULT);
+            GlStateManager.translate(shift[0], -shift[1], 0.0F);
+            GlStateManager.rotate(BLOCK_ROTATION, 0.0F, 1.0F, 0.0F);
+            GlStateManager.translate(0.0F, size.getY() / -2.0F, 0.0F);
+        }
+        RenderHelper.disableStandardItemLighting();
+        GlStateManager.disableLighting();
+        GlStateManager.shadeModel(Minecraft.isAmbientOcclusionEnabled() ? GL11.GL_SMOOTH : GL11.GL_FLAT);
+        this.mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        if (formed) {
+            multiblock.renderFormedStructure();
+            GlStateManager.disableDepth();
+            GlStateManager.disableRescaleNormal();
+            GlStateManager.popMatrix();
+            RenderHelper.enableGUIStandardItemLighting();
             return;
         }
-
-        TemplateMultiblock mb = menu.availableMultiblocks.get(menu.selected_schematic);
-        PoseStack pose = graphics.pose();
-
-        drawMultiblockName(graphics, pose, mb);
-
-        pose.pushPose();
-        renderManualMultimodel(pose, graphics, mb);
-        pose.popPose();
-    }
-
-    private void drawMultiblockName(GuiGraphics graphics, PoseStack pose, TemplateMultiblock mb) {
-        float textWidth = this.font.width(mb.getDisplayName().getVisualOrderText());
-        float scale = textWidth > MAX_DISPLAY_WIDTH ? (MAX_DISPLAY_WIDTH / textWidth) : 1.0f;
-
-        pose.pushPose();
-        pose.translate(leftPos + 174.5, topPos + (8.5*((2+scale)-(scale*2))), 0);
-        pose.scale(scale, scale, scale);
-        graphics.drawString(
-                this.font,
-                mb.getDisplayName(),
-                -this.font.width(mb.getDisplayName().getVisualOrderText()) / 2,
-                0,
-                TEXT_COLOR,
-                false
-        );
-        pose.popPose();
-    }
-
-    public void renderManualMultimodel(PoseStack pose, GuiGraphics graphics, TemplateMultiblock mb) {
-        SchematicTableBlockEntity tile = getMenu().tile;
-        if (tile == null) return;
-        Level level = tile.getLevel();
-        if(level == null) return;
-        ClientMultiblocks.MultiblockManualData renderProperties = ClientMultiblocks.get(mb);
-        List<StructureTemplate.StructureBlockInfo> structure = mb.getStructure(level);
-
-        int[] structureDimensions = calculateStructureDimensions(structure);
-        int structureHeight = structureDimensions[0];
-        int structureWidth = structureDimensions[1];
-        int structureLength = structureDimensions[2];
-
-        float maxDimension = Math.max(structureHeight, Math.max(structureWidth, structureLength));
-
-        pose.pushPose();
-
-        // Set up the rendering transformation
-        float scale = mb.getManualScale() * 0.65f;
-        float renderPosX = leftPos + 174.5f;
-        float renderPosY = topPos + 54.5f;
-
-        pose.translate(renderPosX, renderPosY, maxDimension);
-        pose.scale(scale, -scale, 1.0F);
-
-        // Apply rotations
-        Transformation additionalTransform = createRenderTransform();
-        pose.pushTransformation(additionalTransform);
-        pose.mulPose((new Quaternionf()).rotateXYZ(0.0F, 1.5707964F, 0.0F));
-
-        // Center the structure
-        pose.translate(
-                (float)structureLength / -2.0F,
-                (float)structureHeight / -2.0F,
-                (float)structureWidth / -2.0F
-        );
-
-        // Render the formed structure if possible
-        if (renderProperties.canRenderFormedStructure()) {
-            pose.pushPose();
-            renderProperties.renderFormedStructure(pose, graphics.bufferSource());
-            pose.popPose();
-        }
-
-        pose.popPose();
-    }
-
-    private int[] calculateStructureDimensions(List<StructureTemplate.StructureBlockInfo> structure) {
-        int structureHeight = 0;
-        int structureWidth = 0;
-        int structureLength = 0;
-
-        for (StructureTemplate.StructureBlockInfo block : structure) {
-            structureHeight = Math.max(structureHeight, block.pos().getY() + 1);
-            structureWidth = Math.max(structureWidth, block.pos().getZ() + 1);
-            structureLength = Math.max(structureLength, block.pos().getX() + 1);
-        }
-
-        return new int[] { structureHeight, structureWidth, structureLength };
-    }
-
-    private Transformation createRenderTransform() {
-        return new Transformation(
-                null,
-                (new Quaternionf()).rotateXYZ((float) Math.toRadians(25.0), 0.0F, 0.0F),
-                null,
-                (new Quaternionf()).rotateXYZ(0.0F, (float) Math.toRadians(-45.0), 0.0F)
-        );
-    }
-
-    @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
-    {
-        // Sometimes we get a Concurrent Modification error, this should prevent it from being an issue.
-        try
-        {
-            super.render(graphics, mouseX, mouseY, partialTicks);
-        } catch(Exception ignored){};
-    }
-
-    @Override
-    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 0x666666, false);
-        graphics.drawString(this.font, this.playerInventoryTitle, this.inventoryLabelX, this.inventoryLabelY, 0x666666, false);
-    }
-
-    @Override
-    protected void drawContainerBackgroundPre(@Nonnull GuiGraphics graphics, float f, int mx, int my)
-    {
-
-    }
-
-    private void handleMirrorButtonClick(CompoundTag nbt)
-    {
-        if(!nbt.isEmpty())
-        {
-            sendUpdateToServer(nbt);
-            getMenu().flipSchematic();
-        }
-    }
-
-    @NotNull
-    @Override
-    protected List<InfoArea> makeInfoAreas()
-    {
-        List<InfoArea> areas = new ArrayList<>();
-        return areas;
-    }
-
-    public static class SchematicScrollPanel extends ScrollPanel
-    {
-        private final List<TemplateMultiblock> schematics;
-        private final int entryHeight;
-        private final Minecraft client;
-        private final Function<Integer, Boolean> callback;
-        private final Function<Integer, Boolean> isSelectedCallback;
-        private final Function<Float, Boolean> updateScroller;
-        public SchematicScrollPanel(Minecraft client, int width, int height, int top, int left, List<TemplateMultiblock> schematics, Function<Integer, Boolean> select_callback, Function<Integer, Boolean> isSelectedCallback, Function<Float, Boolean> updateScroller)
-        {
-            super(client, width, height, top, left);
-            this.schematics = schematics;
-            this.entryHeight = 20;
-            this.client = client;
-            this.callback = select_callback;
-            this.isSelectedCallback = isSelectedCallback;
-            this.updateScroller = updateScroller;
-        }
-
-        public void setScrollAmount(float scroll)
-        {
-            this.scrollDistance = scroll;
-        }
-
-        @Override
-        protected int getContentHeight()
-        {
-            return schematics.size() * (entryHeight+1);
-        }
-
-        @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button)
-        {
-            if(mouseX < left || mouseY < top || mouseX > (left+width) || mouseY > (top + height)) return false;
-
-            int y = (int)(mouseY - top + scrollDistance);
-            int index = y / (entryHeight+1);
-            if(index >= 0 && index < schematics.size()) {
-                updateScroller.apply(scrollDistance);
-                return callback.apply(index);
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        int[] cell = {0};
+        projection.processAll((layer, info) -> {
+            BlockPos pos = info.tPos;
+            ItemStack stack = projection.stackFor(info);
+            int index = cell[0]++;
+            GlStateManager.translate(pos.getX(), pos.getY(), pos.getZ());
+            boolean overwritten = ESConveyors.isConveyor(stack) ? ImmersiveEngineering.proxy.drawConveyorInGui(ESConveyors.typeOf(stack), conveyorFacing(multiblock, index)) : multiblock.overwriteBlockRender(stack, index);
+            GlStateManager.translate(-pos.getX(), -pos.getY(), -pos.getZ());
+            if (overwritten) {
+                this.mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+                return false;
             }
+            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
+            dispatcher.renderBlock(access.getBlockState(pos), pos, access, buffer);
+            tessellator.draw();
             return false;
+        });
+        GlStateManager.disableDepth();
+        GlStateManager.disableRescaleNormal();
+        GlStateManager.popMatrix();
+        RenderHelper.enableGUIStandardItemLighting();
+    }
+
+    @Override protected void mouseClicked(int mouseX, int mouseY, int button) throws IOException {
+        super.mouseClicked(mouseX, mouseY, button);
+        if (button != 0) { return; }
+        if (mouseX >= this.guiLeft + 129 && mouseX < this.guiLeft + 220 && mouseY >= this.guiTop + 112 && mouseY < this.guiTop + 128) {
+            sendButton(SchematicsContainerMenu.BUTTON_MIRROR);
+            return;
         }
+        int left = this.guiLeft + LIST_LEFT;
+        int top = this.guiTop + LIST_TOP;
+        if (mouseX < left || mouseX >= left + LIST_WIDTH || mouseY < top || mouseY >= top + LIST_HEIGHT) { return; }
+        int index = (mouseY - top + this.scroll) / ENTRY_HEIGHT;
+        if (index < 0 || index >= this.menu.getAvailableMultiblocks().size()) { return; }
+        if (!isEntryVisible(top + index * ENTRY_HEIGHT - this.scroll, top)) { return; }
+        sendButton(SchematicsContainerMenu.BUTTON_SELECT + index);
+    }
 
-        @Override
-        protected void drawPanel(GuiGraphics graphics, int entryRight, int scrollY, Tesselator tesselator, int mouseX, int mouseY)
-        {
-            int y = scrollY - 2;
-            PoseStack pose = graphics.pose();
-            Font font = client.font;
-            for (int i = 0; i < schematics.size(); i++)
-            {
-                TemplateMultiblock template = schematics.get(i);
-                float textWidth = font.width(template.getDisplayName().getVisualOrderText());
-                float fScale = textWidth > MAX_DISPLAY_WIDTH ? (MAX_DISPLAY_WIDTH / textWidth) : 1.0f;
-                int entryTop = y+i*(entryHeight + 1);
-                int entryBottom = entryTop+entryHeight;
-                graphics.blit(TEXTURE, left, entryTop, 1, 219, 104, 20);
-                boolean hover = mouseY > entryTop && mouseY < entryBottom && isMouseOver(mouseX, mouseY);
-                int color = isSelectedCallback.apply(i) ? 0xFFFFFF : (hover ? 0xAAFFAA : 0x666666);
+    @Override public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        int wheel = Mouse.getEventDWheel();
+        if (wheel == 0) { return; }
+        int content = this.menu.getAvailableMultiblocks().size() * ENTRY_HEIGHT;
+        int max = Math.max(0, content - LIST_HEIGHT);
+        this.scroll = Math.max(0, Math.min(max, this.scroll - Integer.signum(wheel) * ENTRY_HEIGHT));
+    }
 
-                pose.pushPose();
-                pose.translate(left+10, entryTop+(6*((2+fScale)-(fScale*2))),0);
-                pose.pushPose();
-                    pose.scale(fScale,fScale,fScale);
-                    graphics.drawString(font, template.getDisplayName(), 0,0, color, false);
-                pose.popPose();
-                pose.popPose();
-            }
-        }
-
-        @Override
-        public NarrationPriority narrationPriority()
-        {
-            return NarrationPriority.NONE;
-        }
-
-        @Override
-        public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {}
+    private void sendButton(int id) {
+        this.mc.playerController.sendEnchantPacket(this.inventorySlots.windowId, id);
+        this.menu.enchantItem(this.mc.player, id);
     }
 }

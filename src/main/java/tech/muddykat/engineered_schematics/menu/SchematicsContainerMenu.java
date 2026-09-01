@@ -1,232 +1,226 @@
 package tech.muddykat.engineered_schematics.menu;
 
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
-import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
-import blusunrize.immersiveengineering.common.gui.IEBaseContainerOld;
-import blusunrize.immersiveengineering.common.gui.IESlot;
-import blusunrize.immersiveengineering.mixin.accessors.ContainerAccess;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.Container;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
-import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.Level;
-import net.neoforged.fml.loading.FMLLoader;
-import org.jetbrains.annotations.NotNull;
 import tech.muddykat.engineered_schematics.block.entity.SchematicTableBlockEntity;
 
+import blusunrize.immersiveengineering.api.MultiblockHandler;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.inventory.ClickType;
+import net.minecraft.inventory.Container;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
+
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
-public class SchematicsContainerMenu extends IEBaseContainerOld<SchematicTableBlockEntity>
-{
-    public static final int MAX_NUM_DYNAMIC_SLOTS = 8;
-    public final Inventory inventoryPlayer;
-    public SchematicInventory inventorySchematic;
-    private final Level world;
+public class SchematicsContainerMenu extends Container {
+    public static final int BUTTON_MIRROR = 0;
+    public static final int BUTTON_SELECT = 100;
+    private static final int SCHEMATIC_SLOTS = 1;
+    private static final Set<String> EXCLUDED = Collections.singleton("IE:Feedthrough");
+    private final InventoryPlayer inventoryPlayer;
+    private final SchematicTableBlockEntity tile;
+    private final IInventory tableInventory;
+    private final List<MultiblockHandler.IMultiblock> availableMultiblocks;
+    private SchematicInventory inventorySchematic;
+    private int selectedSchematic;
+    private boolean mirrored;
 
-    public int selected_schematic = 0;
-    public final List<TemplateMultiblock> availableMultiblocks = MultiblockHandler.getMultiblocks().stream().filter(mb -> mb instanceof TemplateMultiblock).map(mb -> (TemplateMultiblock) mb).toList();
-    public Boolean isMirroredSchematic;
-
-    public SchematicsContainerMenu(MenuType<?> type, int id, Inventory inventoryPlayer, SchematicTableBlockEntity tile)
-    {
-        super(type, tile, id);
+    public SchematicsContainerMenu(InventoryPlayer inventoryPlayer, SchematicTableBlockEntity tile) {
         this.inventoryPlayer = inventoryPlayer;
-        this.world = tile.getLevelNonnull();
-        selected_schematic = 0;
-        this.isMirroredSchematic = false;
-        this.inventorySchematic = new SchematicInventory(this, List.of(availableMultiblocks.get(selected_schematic)));
+        this.tile = tile;
+        this.tableInventory = new SchematicTableInventory(tile);
+        this.availableMultiblocks = new ArrayList<>();
+        for (MultiblockHandler.IMultiblock candidate : MultiblockHandler.getMultiblocks()) {
+            if (!EXCLUDED.contains(candidate.getUniqueName())) { this.availableMultiblocks.add(candidate); }
+        }
+        this.selectedSchematic = 0;
+        this.mirrored = false;
+        this.inventorySchematic = new SchematicInventory(this, selection());
         rebindSlots();
     }
 
-    private void bindPlayerInv(Inventory inventoryPlayer) {
-        int i;
-        for(i = 0; i < 3; ++i) {
-            for(int j = 0; j < 9; ++j) {
-                this.addSlot(new Slot(inventoryPlayer, j + i * 9 + 9, 35 + j * 18, 137 + i * 18));
+    public List<MultiblockHandler.IMultiblock> getAvailableMultiblocks() { return this.availableMultiblocks; }
+
+    public int getSelectedSchematic() { return this.selectedSchematic; }
+
+    public boolean isMirrored() { return this.mirrored; }
+
+    private List<MultiblockHandler.IMultiblock> selection() {
+        if (this.availableMultiblocks.isEmpty()) { return Collections.emptyList(); }
+        return Collections.singletonList(this.availableMultiblocks.get(this.selectedSchematic));
+    }
+
+    public final void rebindSlots() {
+        this.inventorySlots.clear();
+        this.inventoryItemStacks.clear();
+        this.inventorySchematic = new SchematicInventory(this, selection());
+        addSlotToContainer(new SchematicInputSlot(this, this.tableInventory, 0, 144, 89));
+        int used = 1;
+        if (!this.tableInventory.getStackInSlot(0).isEmpty() && !this.availableMultiblocks.isEmpty()) {
+            this.inventorySchematic.updateOutputs(this.tableInventory);
+            addSlotToContainer(new SchematicSlot(this.inventorySchematic, this.tableInventory, 0, 190, 89));
+            used++;
+        }
+        for (; used < SCHEMATIC_SLOTS + 1; used++) {
+            addSlotToContainer(new EmptySlot(this.inventorySchematic));
+        }
+        bindPlayerInventory();
+    }
+
+    private void bindPlayerInventory() {
+        for (int row = 0; row < 3; row++) {
+            for (int column = 0; column < 9; column++) {
+                addSlotToContainer(new Slot(this.inventoryPlayer, column + row * 9 + 9, 35 + column * 18, 137 + row * 18));
             }
         }
-
-        for(i = 0; i < 9; ++i) {
-            this.addSlot(new Slot(inventoryPlayer, i, 35 + i * 18, 195));
+        for (int column = 0; column < 9; column++) {
+            addSlotToContainer(new Slot(this.inventoryPlayer, column, 35 + column * 18, 195));
         }
     }
 
+    public void selectSchematic(int index) {
+        if (this.availableMultiblocks.isEmpty()) { return; }
+        this.selectedSchematic = Math.floorMod(index, this.availableMultiblocks.size());
+        rebindSlots();
+    }
 
+    public void flipSchematic() {
+        this.mirrored = !this.mirrored;
+        rebindSlots();
+    }
 
-    public void rebindSlots()
-    {
-        this.slots.clear();
-        ((ContainerAccess)this).getLastSlots().clear();
-        ((ContainerAccess)this).getRemoteSlots().clear();
-        assert this.inv!=null;
-        this.addSlot(new SchematicInputSlot(this, this.inv, 0, 144, 89, 64));
-        ownSlotCount = 1;
+    @Override public boolean enchantItem(@Nonnull EntityPlayer player, int id) {
+        if (id == BUTTON_MIRROR) {
+            flipSchematic();
+            return true;
+        }
+        if (id >= BUTTON_SELECT) {
+            selectSchematic(id - BUTTON_SELECT);
+            return true;
+        }
+        return false;
+    }
 
-        int amount_of_schematics = List.of(availableMultiblocks.get(selected_schematic)).size();
+    @Override @Nonnull public ItemStack slotClick(int slotId, int dragType, @Nonnull ClickType clickType, @Nonnull EntityPlayer player) {
+        ItemStack result = super.slotClick(slotId, dragType, clickType, player);
+        this.tile.markContainingBlockForUpdate(null);
+        if (!player.world.isRemote) { detectAndSendChanges(); }
+        return result;
+    }
 
-        this.inventorySchematic = new SchematicInventory(this, List.of(availableMultiblocks.get(selected_schematic)));
-        if(this.inv.getItem(0).getCount() > 0)
-        {
-            for(int i = 0; i < amount_of_schematics; i++)
-            {
-                TemplateMultiblock template = availableMultiblocks.get(i);
-                int y = 89+(i < 9?i/3: (-(i-6)/3))*18;
-                this.addSlot(new SchematicSlot(this, inventorySchematic, this.inv, i, 190+(i%3*18), y, template));
-                ownSlotCount++;
-                inventorySchematic.updateOutputs(inv);
+    @Override @Nonnull public ItemStack transferStackInSlot(@Nonnull EntityPlayer player, int index) { return ItemStack.EMPTY; }
+
+    @Override public boolean canInteractWith(@Nonnull EntityPlayer player) { return this.tile.getWorld().getTileEntity(this.tile.getPos()) == this.tile && player.getDistanceSq(this.tile.getPos()) <= 64.0D; }
+
+    public static class SchematicTableInventory implements IInventory {
+        private final SchematicTableBlockEntity tile;
+
+        public SchematicTableInventory(SchematicTableBlockEntity tile) { this.tile = tile; }
+
+        private NonNullList<ItemStack> items() { return this.tile.getInventory(); }
+
+        @Override public int getSizeInventory() { return items().size(); }
+
+        @Override public boolean isEmpty() {
+            for (ItemStack stack : items()) {
+                if (!stack.isEmpty()) { return false; }
             }
-        }
-        // Add "useless" slots to keep the number of slots (and therefore the IDs of the player inventory slots)
-        // constant. MC doesn't handle changing slot IDs well, causing desyncs
-        for(; ownSlotCount < MAX_NUM_DYNAMIC_SLOTS; ++ownSlotCount)
-            addSlot(new IESlot.AlwaysEmptySlot(this));
-        bindPlayerInv(inventoryPlayer);
-
-        if(FMLLoader.getDist().isClient())
-        {
-            Screen currentScreen = Minecraft.getInstance().screen;
-            if(currentScreen instanceof IEContainerScreen<?>) currentScreen.init(Minecraft.getInstance(), currentScreen.width, currentScreen.height);
-        }
-    }
-
-    public void nextSchematic()
-    {
-        this.selected_schematic = (selected_schematic + 1) % availableMultiblocks.size();
-        this.inventorySchematic = new SchematicInventory(this, List.of(availableMultiblocks.get(selected_schematic)));
-    }
-
-    public void previousSchematic()
-    {
-        int toSelect = selected_schematic - 1;
-        if(toSelect < 0) toSelect = availableMultiblocks.size() -1;
-        this.selected_schematic = toSelect;
-        this.inventorySchematic = new SchematicInventory(this, List.of(availableMultiblocks.get(selected_schematic)));
-    }
-
-
-    public void flipSchematic()
-    {
-        isMirroredSchematic = !isMirroredSchematic;
-    }
-
-    @Override
-    public void clicked(int id, int dragType, ClickType clickType, Player player)
-    {
-        super.clicked(id, dragType, clickType, player);
-        tile.markContainingBlockForUpdate(null);
-        if(!world.isClientSide)
-            broadcastChanges();
-    }
-
-    @Override
-    public void receiveMessageFromScreen(CompoundTag nbt)
-    {
-        if(nbt.contains("index"))
-        {
-            int index = nbt.getInt("index");
-            jumpToSchematic(index);
-            this.rebindSlots();
-        }
-
-        if(nbt.contains("mirrored"))
-        {
-            this.isMirroredSchematic = nbt.getBoolean("mirrored");
-            this.rebindSlots();
-        }
-    }
-
-    public Boolean getSchematicMirrorState()
-    {
-        return this.isMirroredSchematic;
-    }
-
-    public void jumpToSchematic(Integer index)
-    {
-        int toSelect = index;
-        if(toSelect < 0) toSelect = availableMultiblocks.size() -1;
-        this.selected_schematic = toSelect % availableMultiblocks.size();
-        this.inventorySchematic = new SchematicInventory(this, List.of(availableMultiblocks.get(selected_schematic)));
-    }
-
-    public static class SchematicInputSlot extends IESlot
-    {
-        int size;
-        SchematicsContainerMenu schematicMenu;
-        public SchematicInputSlot(SchematicsContainerMenu containerMenu, Container inv, int id, int x, int y, int size)
-        {
-            super(containerMenu, inv, id, x, y);
-            this.size = size;
-            this.schematicMenu = containerMenu;
-        }
-        @Override
-        public boolean mayPlace(ItemStack itemStack)
-        {
-            if(itemStack.isEmpty()) return false;
-            if(itemStack.getItem().equals(Items.PAPER)) return true;
-            return false;
-        }
-
-        @Override
-        public int getMaxStackSize(ItemStack stack)
-        {
-            return size;
-        }
-
-        @Override
-        public void setChanged()
-        {
-            super.setChanged();
-            schematicMenu.rebindSlots();
-        }
-
-        @Override
-        public boolean mayPickup(Player pPlayer)
-        {
             return true;
         }
 
+        @Override @Nonnull public ItemStack getStackInSlot(int index) { return items().get(index); }
+
+        @Override @Nonnull public ItemStack decrStackSize(int index, int count) {
+            ItemStack stack = net.minecraft.inventory.ItemStackHelper.getAndSplit(items(), index, count);
+            if (!stack.isEmpty()) { markDirty(); }
+            return stack;
+        }
+
+        @Override @Nonnull public ItemStack removeStackFromSlot(int index) { return net.minecraft.inventory.ItemStackHelper.getAndRemove(items(), index); }
+
+        @Override public void setInventorySlotContents(int index, @Nonnull ItemStack stack) {
+            items().set(index, stack);
+            markDirty();
+        }
+
+        @Override public int getInventoryStackLimit() { return 64; }
+
+        @Override public void markDirty() {
+            this.tile.markDirty();
+            this.tile.markContainingBlockForUpdate(null);
+        }
+
+        @Override public boolean isUsableByPlayer(@Nonnull EntityPlayer player) { return true; }
+
+        @Override public void openInventory(@Nonnull EntityPlayer player) {}
+
+        @Override public void closeInventory(@Nonnull EntityPlayer player) {}
+
+        @Override public boolean isItemValidForSlot(int index, @Nonnull ItemStack stack) { return this.tile.isStackValid(index, stack); }
+
+        @Override public int getField(int id) { return 0; }
+
+        @Override public void setField(int id, int value) {}
+
+        @Override public int getFieldCount() { return 0; }
+
+        @Override public void clear() { items().clear(); }
+
+        @Override @Nonnull public String getName() { return "engineered_schematics.schematic_table"; }
+
+        @Override public boolean hasCustomName() { return false; }
+
+        @Override @Nonnull public net.minecraft.util.text.ITextComponent getDisplayName() { return new net.minecraft.util.text.TextComponentTranslation("desc.engineered_schematics.schematic_table"); }
     }
 
-    public static class SchematicSlot extends IESlot {
-        private final Container inputInventory;
-        public final TemplateMultiblock template;
-        public SchematicSlot(AbstractContainerMenu container, SchematicInventory inv, Container inputInventory, int id, int x, int y, TemplateMultiblock template)
-        {
-            super(container, inv, id, x, y);
+    public static class SchematicInputSlot extends Slot {
+        private final SchematicsContainerMenu menu;
+
+        public SchematicInputSlot(SchematicsContainerMenu menu, IInventory inventory, int id, int x, int y) {
+            super(inventory, id, x, y);
+            this.menu = menu;
+        }
+
+        @Override public boolean isItemValid(@Nonnull ItemStack stack) { return !stack.isEmpty() && stack.getItem() == Items.PAPER; }
+
+        @Override public void onSlotChanged() {
+            super.onSlotChanged();
+            this.menu.rebindSlots();
+        }
+    }
+
+    public static class SchematicSlot extends Slot {
+        private final IInventory inputInventory;
+
+        public SchematicSlot(SchematicInventory inventory, IInventory inputInventory, int id, int x, int y) {
+            super(inventory, id, x, y);
             this.inputInventory = inputInventory;
-            this.template = template;
         }
 
-        @Override
-        public boolean mayPlace(@NotNull ItemStack stack)
-        {
-            return false;
+        @Override public boolean isItemValid(@Nonnull ItemStack stack) { return false; }
+
+        @Override @Nonnull public ItemStack onTake(@Nonnull EntityPlayer player, @Nonnull ItemStack stack) {
+            ((SchematicInventory)this.inventory).reduceInputs(this.inputInventory);
+            return super.onTake(player, stack);
+        }
+    }
+
+    public static class EmptySlot extends Slot {
+        public EmptySlot(IInventory inventory) {
+            super(inventory, 0, -1000, -1000);
         }
 
-        @Override
-        public boolean mayPickup(@NotNull Player player)
-        {
-            return true;
-        }
+        @Override public boolean isItemValid(@Nonnull ItemStack stack) { return false; }
 
-        @Override
-        public boolean isActive() {
-            return this.hasItem();
-        }
+        @Override public boolean canTakeStack(@Nonnull EntityPlayer player) { return false; }
 
-        @Override
-        public void onTake(Player player, ItemStack stack) {
-            ((SchematicInventory)this.container).reduceInputs(this.inputInventory, stack);
-            super.onTake(player, stack);
-        }
+        @Override @Nonnull public ItemStack getStack() { return ItemStack.EMPTY; }
     }
 }

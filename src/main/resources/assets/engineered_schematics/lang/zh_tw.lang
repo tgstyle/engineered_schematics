@@ -1,0 +1,22 @@
+#Multiblock names, sourced from Immersive Engineering's own block names
+desc.engineered_schematics.multiblock.IE:CokeOven=焦爐
+desc.engineered_schematics.multiblock.IE:AlloySmelter=合金爐
+desc.engineered_schematics.multiblock.IE:BlastFurnace=高爐
+desc.engineered_schematics.multiblock.IE:BlastFurnaceAdvanced=強化高爐
+desc.engineered_schematics.multiblock.IE:MetalPress=金屬沖壓機
+desc.engineered_schematics.multiblock.IE:Crusher=粉碎機
+desc.engineered_schematics.multiblock.IE:SheetmetalTank=液體儲罐
+desc.engineered_schematics.multiblock.IE:Silo=儲物桶倉
+desc.engineered_schematics.multiblock.IE:Assembler=裝配機
+desc.engineered_schematics.multiblock.IE:AutoWorkbench=自動化工程師裝配台
+desc.engineered_schematics.multiblock.IE:BottlingMachine=灌裝機
+desc.engineered_schematics.multiblock.IE:Squeezer=工業擠壓機
+desc.engineered_schematics.multiblock.IE:Fermenter=工業發酵機
+desc.engineered_schematics.multiblock.IE:Refinery=煉油廠
+desc.engineered_schematics.multiblock.IE:DieselGenerator=柴油發電機
+desc.engineered_schematics.multiblock.IE:Excavator=挖掘機
+desc.engineered_schematics.multiblock.IE:BucketWheel=斗輪
+desc.engineered_schematics.multiblock.IE:ArcFurnace=電弧爐
+desc.engineered_schematics.multiblock.IE:Lightningrod=避雷針
+desc.engineered_schematics.multiblock.IE:Mixer=攪拌混合機
+desc.engineered_schematics.multiblock.IE:Feedthrough=穿心絕緣子

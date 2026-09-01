@@ -1,0 +1,22 @@
+#Multiblock names, sourced from Immersive Engineering's own block names
+desc.engineered_schematics.multiblock.IE:CokeOven=Forno de Coque
+desc.engineered_schematics.multiblock.IE:AlloySmelter=Forno de Liga
+desc.engineered_schematics.multiblock.IE:BlastFurnace=Alto-forno Bruto
+desc.engineered_schematics.multiblock.IE:BlastFurnaceAdvanced=Alto-forno melhorado
+desc.engineered_schematics.multiblock.IE:MetalPress=Prensa de Metal
+desc.engineered_schematics.multiblock.IE:Crusher=Trituradora
+desc.engineered_schematics.multiblock.IE:SheetmetalTank=Tanque de Fluidos
+desc.engineered_schematics.multiblock.IE:Silo=Silo de Itens
+desc.engineered_schematics.multiblock.IE:Assembler=Montador
+desc.engineered_schematics.multiblock.IE:AutoWorkbench=Bancada de Trabalho do Engenheiro Automatizada
+desc.engineered_schematics.multiblock.IE:BottlingMachine=Máquina de Engarrafamento
+desc.engineered_schematics.multiblock.IE:Squeezer=Espremedor Industrial
+desc.engineered_schematics.multiblock.IE:Fermenter=Fermentador Industrial
+desc.engineered_schematics.multiblock.IE:Refinery=Refinaria
+desc.engineered_schematics.multiblock.IE:DieselGenerator=Gerador de Diesel
+desc.engineered_schematics.multiblock.IE:Excavator=Escavadora
+desc.engineered_schematics.multiblock.IE:BucketWheel=Roda de Balde
+desc.engineered_schematics.multiblock.IE:ArcFurnace=Fornalha de Arco
+desc.engineered_schematics.multiblock.IE:Lightningrod=Para-raios
+desc.engineered_schematics.multiblock.IE:Mixer=Misturador
+desc.engineered_schematics.multiblock.IE:Feedthrough=Isolador de Passagem Direta
