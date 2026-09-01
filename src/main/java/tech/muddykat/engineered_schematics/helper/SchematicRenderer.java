@@ -70,9 +70,11 @@ public class SchematicRenderer {
         Map<BlockPos, Boolean> badStates = new HashMap<>();
         List<Entry> toRender = new ArrayList<>();
         RenderingState state = processBlocks(projection, world, origin, badStates, toRender);
+        BlockPos.MutableBlockPos probe = new BlockPos.MutableBlockPos();
         for (Entry entry : toRender) {
-            TileEntity te = world.getTileEntity(entry.info.tPos.add(origin));
-            if (te instanceof TileEntityMultiblockPart) {
+            BlockPos local = entry.info.tPos;
+            probe.setPos(local.getX() + origin.getX(), local.getY() + origin.getY(), local.getZ() + origin.getZ());
+            if (world.getTileEntity(probe) instanceof TileEntityMultiblockPart) {
                 renderSchematicGrid(settings, COLOR_SUCCESS);
                 return;
             }
@@ -145,24 +147,25 @@ public class SchematicRenderer {
     }
 
     private static void renderResults(RenderingState state, ESSchematicSettings settings, MultiblockHandler.IMultiblock multiblock, BlockPos origin, EntityPlayer player, Vec3i size, Map<BlockPos, Boolean> badStates, List<Entry> toRender, SchematicProjection projection) {
-        SchematicBlockAccess access = new SchematicBlockAccess(projection);
         BlockPos.MutableBlockPos min = new BlockPos.MutableBlockPos(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
         BlockPos.MutableBlockPos max = new BlockPos.MutableBlockPos(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
         ItemStack heldStack = player.getHeldItemMainhand();
         IBlockState heldState = heldStack.getItem() instanceof ItemBlock ? ((ItemBlock)heldStack.getItem()).getBlock().getDefaultState() : null;
         GlStateManager.pushMatrix();
         GlStateManager.translate(origin.getX(), origin.getY(), origin.getZ());
-        for (Entry entry : toRender) {
-            if (entry.layer != RenderLayer.ALL) { continue; }
-            if (state.hasWrongBlock) { continue; }
-            boolean isHeld = heldState != null && isValidBlockForSchematic(entry.info.getRawState(), heldState);
-            renderPhantom(entry.info, access, isHeld ? COLOR_HELD : COLOR_NORMAL);
-            if (isHeld) { renderCenteredOutlineBox(entry.info.tPos, COLOR_HIGHLIGHT); }
+        if (!state.hasWrongBlock && hasPhantoms(toRender)) {
+            List<BlockPos> held = new ArrayList<>();
+            renderPhantoms(toRender, new SchematicBlockAccess(projection), heldState, held);
+            if (!held.isEmpty()) { renderOutlineBoxes(held, COLOR_HIGHLIGHT); }
         }
+        List<BlockPos> warning = new ArrayList<>();
+        List<BlockPos> error = new ArrayList<>();
         for (Entry entry : toRender) {
-            if (entry.layer == RenderLayer.BAD) { renderCenteredOutlineBox(entry.info.tPos, Boolean.TRUE.equals(badStates.get(entry.info.tPos)) ? COLOR_WARNING : COLOR_ERROR); }
+            if (entry.layer == RenderLayer.BAD) { (Boolean.TRUE.equals(badStates.get(entry.info.tPos)) ? warning : error).add(entry.info.tPos); }
             else if (entry.layer == RenderLayer.PERFECT) { updatePerfectBounds(min, max, entry.info); }
         }
+        if (!warning.isEmpty()) { renderOutlineBoxes(warning, COLOR_WARNING); }
+        if (!error.isEmpty()) { renderOutlineBoxes(error, COLOR_ERROR); }
         int gridLayer = state.currentLayer;
         for (BlockPos bad : badStates.keySet()) {
             gridLayer = Math.min(gridLayer, bad.getY());
@@ -249,27 +252,60 @@ public class SchematicRenderer {
         GlStateManager.popMatrix();
     }
 
-    private static void renderPhantom(SchematicProjection.Info info, SchematicBlockAccess access, float[] color) {
-        IBlockState state = info.getModifiedState().getActualState(access, info.tPos);
-        if (state.getRenderType() != EnumBlockRenderType.MODEL) { return; }
-        IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getModelForState(state);
-        GlStateManager.pushMatrix();
-        GlStateManager.translate(info.tPos.getX(), info.tPos.getY(), info.tPos.getZ());
-        GlStateManager.scale(0.5F, 0.5F, 0.5F);
-        GlStateManager.translate(0.5F, 0.5F, 0.5F);
-        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+    private static boolean hasPhantoms(List<Entry> toRender) {
+        for (Entry entry : toRender) {
+            if (entry.layer == RenderLayer.ALL) { return true; }
+        }
+        return false;
+    }
+
+    private static void renderPhantoms(List<Entry> toRender, SchematicBlockAccess access, IBlockState heldState, List<BlockPos> held) {
+        Minecraft mc = Minecraft.getMinecraft();
+        mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         RenderHelper.disableStandardItemLighting();
         GlStateManager.disableLighting();
-        ESShaders.use(0.0F, color[0], color[1], color[2]);
-        Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelRenderer().renderModelBrightnessColor(state, model, 1.0F, 1.0F, 1.0F, 1.0F);
-        ESShaders.end();
+        for (int pass = 0; pass < 2; pass++) {
+            boolean wantHeld = pass == 1;
+            boolean started = false;
+            for (Entry entry : toRender) {
+                if (entry.layer != RenderLayer.ALL) { continue; }
+                boolean isHeld = heldState != null && isValidBlockForSchematic(entry.info.getRawState(), heldState);
+                if (isHeld != wantHeld) { continue; }
+                if (isHeld && pass == 1) { held.add(entry.info.tPos); }
+                IBlockState state = entry.info.getModifiedState().getActualState(access, entry.info.tPos);
+                if (state.getRenderType() != EnumBlockRenderType.MODEL) { continue; }
+                if (!started) {
+                    float[] color = wantHeld ? COLOR_HELD : COLOR_NORMAL;
+                    ESShaders.use(0.0F, color[0], color[1], color[2]);
+                    started = true;
+                }
+                IBakedModel model = mc.getBlockRendererDispatcher().getModelForState(state);
+                GlStateManager.pushMatrix();
+                GlStateManager.translate(entry.info.tPos.getX(), entry.info.tPos.getY(), entry.info.tPos.getZ());
+                GlStateManager.scale(0.5F, 0.5F, 0.5F);
+                GlStateManager.translate(0.5F, 0.5F, 0.5F);
+                mc.getBlockRendererDispatcher().getBlockModelRenderer().renderModelBrightnessColor(state, model, 1.0F, 1.0F, 1.0F, 1.0F);
+                GlStateManager.popMatrix();
+            }
+            if (started) { ESShaders.end(); }
+        }
         GlStateManager.enableLighting();
-        GlStateManager.popMatrix();
     }
 
     private static void updatePerfectBounds(BlockPos.MutableBlockPos min, BlockPos.MutableBlockPos max, SchematicProjection.Info info) {
         min.setPos(Math.min(info.tPos.getX(), min.getX()), Math.min(info.tPos.getY(), min.getY()), Math.min(info.tPos.getZ(), min.getZ()));
         max.setPos(Math.max(info.tPos.getX(), max.getX()), Math.max(info.tPos.getY(), max.getY()), Math.max(info.tPos.getZ(), max.getZ()));
+    }
+
+    private static void renderOutlineBoxes(List<BlockPos> positions, int rgb) {
+        beginLines();
+        BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+        buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+        for (BlockPos pos : positions) {
+            addBox(buffer, pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1, rgb);
+        }
+        Tessellator.getInstance().draw();
+        endLines();
     }
 
     private static void renderCenteredOutlineBox(BlockPos pos, int rgb) {
@@ -300,6 +336,15 @@ public class SchematicRenderer {
     }
 
     private static void renderBox(double minX, double minY, double minZ, double maxX, double maxY, double maxZ, int rgb) {
+        beginLines();
+        BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+        buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+        addBox(buffer, minX, minY, minZ, maxX, maxY, maxZ, rgb);
+        Tessellator.getInstance().draw();
+        endLines();
+    }
+
+    private static void addBox(BufferBuilder buffer, double minX, double minY, double minZ, double maxX, double maxY, double maxZ, int rgb) {
         double eps = 0.01;
         minX -= eps;
         minY -= eps;
@@ -307,9 +352,6 @@ public class SchematicRenderer {
         maxX += eps;
         maxY += eps;
         maxZ += eps;
-        beginLines();
-        BufferBuilder buffer = Tessellator.getInstance().getBuffer();
-        buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
         line(buffer, minX, minY, minZ, maxX, minY, minZ, rgb);
         line(buffer, maxX, minY, minZ, maxX, minY, maxZ, rgb);
         line(buffer, maxX, minY, maxZ, minX, minY, maxZ, rgb);
@@ -322,8 +364,6 @@ public class SchematicRenderer {
         line(buffer, maxX, minY, minZ, maxX, maxY, minZ, rgb);
         line(buffer, maxX, minY, maxZ, maxX, maxY, maxZ, rgb);
         line(buffer, minX, minY, maxZ, minX, maxY, maxZ, rgb);
-        Tessellator.getInstance().draw();
-        endLines();
     }
 
     private static void line(BufferBuilder buffer, double x1, double y1, double z1, double x2, double y2, double z2, int rgb) {
@@ -344,9 +384,11 @@ public class SchematicRenderer {
     }
 
     private static void endLines() {
+        GlStateManager.glLineWidth(1.0F);
         GlStateManager.depthMask(true);
         GlStateManager.disableBlend();
         GlStateManager.enableTexture2D();
+        GlStateManager.enableLighting();
     }
 
     private static void drawFrontGroundText(Vec3i size, Rotation rotation, int rgb, String text, int span) {
