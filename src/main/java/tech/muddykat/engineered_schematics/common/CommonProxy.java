@@ -19,6 +19,8 @@ public class CommonProxy implements IGuiHandler {
 
     public void postInit() {}
 
+    public void loadComplete() {}
+
     @Nullable
     protected static SchematicTableBlockEntity getTable(World world, int x, int y, int z) {
         TileEntity te = world.getTileEntity(new BlockPos(x, y, z));

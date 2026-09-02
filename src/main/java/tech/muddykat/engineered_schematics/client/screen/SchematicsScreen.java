@@ -1,6 +1,7 @@
 package tech.muddykat.engineered_schematics.client.screen;
 
 import tech.muddykat.engineered_schematics.EngineeredSchematics;
+import tech.muddykat.engineered_schematics.util.ESPreviewConfig;
 import tech.muddykat.engineered_schematics.helper.SchematicBlockAccess;
 import tech.muddykat.engineered_schematics.item.SchematicProjection;
 import tech.muddykat.engineered_schematics.menu.SchematicsContainerMenu;
@@ -10,10 +11,9 @@ import tech.muddykat.engineered_schematics.util.ESMultiblocks;
 
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.api.MultiblockHandler;
-import blusunrize.immersiveengineering.api.tool.ConveyorHandler;
-import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -23,10 +23,10 @@ import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3i;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -48,18 +48,17 @@ public class SchematicsScreen extends GuiContainer {
     private static final int LIST_WIDTH = 110;
     private static final int LIST_HEIGHT = 92;
     private static final int ENTRY_HEIGHT = 21;
+    private static final int ENTRY_WIDTH = 104;
+    private static final int SCROLLBAR_WIDTH = 6;
+    private static final int SCROLLBAR_MIN_HEIGHT = 32;
     private static final float PREVIEW_DEPTH = 100.0F;
     private static final EnumFacing CONVEYOR_FACING = EnumFacing.EAST;
     private static final Map<String, Map<Integer, EnumFacing>> CONVEYOR_FACINGS = conveyorFacings();
     private static final float FORMED_SCALE = 0.75F;
     private static final float BLOCK_ROTATION = 180.0F;
-    private static final Map<String, Float> FORMED_SCALES = formedScales();
-    private static final float[] FORMED_SHIFT_DEFAULT = {0.0F, 0.0F};
-    private static final Map<String, float[]> FORMED_SHIFTS = formedShifts();
-    private static final float[] PREVIEW_SHIFT_DEFAULT = {0.0F, 0.0F};
-    private static final Map<String, float[]> PREVIEW_SHIFTS = previewShifts();
     private final SchematicsContainerMenu menu;
     private int scroll;
+    private boolean draggingScrollbar;
 
     public SchematicsScreen(SchematicsContainerMenu menu) {
         super(menu);
@@ -97,13 +96,16 @@ public class SchematicsScreen extends GuiContainer {
         FontRenderer font = this.fontRenderer;
         int left = this.guiLeft + LIST_LEFT;
         int top = this.guiTop + LIST_TOP;
+        int scaleFactor = new ScaledResolution(this.mc).getScaleFactor();
+        GL11.glEnable(GL11.GL_SCISSOR_TEST);
+        GL11.glScissor(left * scaleFactor, this.mc.displayHeight - (top + LIST_HEIGHT) * scaleFactor, ENTRY_WIDTH * scaleFactor, LIST_HEIGHT * scaleFactor);
         for (int i = 0; i < multiblocks.size(); i++) {
             int entryTop = top + i * ENTRY_HEIGHT - this.scroll;
             if (!isEntryVisible(entryTop, top)) { continue; }
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             this.mc.getTextureManager().bindTexture(TEXTURE);
             drawTexturedModalRect(left, entryTop, 1, 219, 104, 20);
-            boolean hover = mouseX >= left && mouseX < left + LIST_WIDTH && mouseY >= entryTop && mouseY < entryTop + ENTRY_HEIGHT - 1;
+            boolean hover = mouseX >= left && mouseX < left + ENTRY_WIDTH && mouseY >= entryTop && mouseY < entryTop + ENTRY_HEIGHT - 1;
             int color = i == this.menu.getSelectedSchematic() ? 0xFFFFFF : (hover ? 0xAAFFAA : TEXT_COLOR);
             String name = ESMultiblocks.getDisplayName(multiblocks.get(i));
             float scale = scaleFor(font, name);
@@ -113,6 +115,32 @@ public class SchematicsScreen extends GuiContainer {
             font.drawString(name, 0, 0, color);
             GlStateManager.popMatrix();
         }
+        GL11.glDisable(GL11.GL_SCISSOR_TEST);
+        drawScrollbar();
+    }
+
+    private void drawScrollbar() {
+        int max = maxScroll();
+        if (max <= 0) { return; }
+        int left = this.guiLeft + LIST_LEFT + ENTRY_WIDTH;
+        int top = this.guiTop + LIST_TOP;
+        int barHeight = scrollbarHeight();
+        int barTop = top + this.scroll * (LIST_HEIGHT - barHeight) / max;
+        drawRect(left, top, left + SCROLLBAR_WIDTH, top + LIST_HEIGHT, 0xFF000000);
+        drawRect(left, barTop, left + SCROLLBAR_WIDTH, barTop + barHeight, 0xFF808080);
+        drawRect(left, barTop, left + SCROLLBAR_WIDTH - 1, barTop + barHeight - 1, 0xFFC0C0C0);
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
+    private int maxScroll() { return Math.max(0, this.menu.getAvailableMultiblocks().size() * ENTRY_HEIGHT - LIST_HEIGHT); }
+
+    private int scrollbarHeight() { return MathHelper.clamp(LIST_HEIGHT * LIST_HEIGHT / (this.menu.getAvailableMultiblocks().size() * ENTRY_HEIGHT), SCROLLBAR_MIN_HEIGHT, LIST_HEIGHT); }
+
+    private void scrollTo(int mouseY) {
+        int barHeight = scrollbarHeight();
+        int track = LIST_HEIGHT - barHeight;
+        if (track <= 0) { return; }
+        this.scroll = MathHelper.clamp((mouseY - (this.guiTop + LIST_TOP) - barHeight / 2) * maxScroll() / track, 0, maxScroll());
     }
 
     private void drawMultiblockName(MultiblockHandler.IMultiblock multiblock) {
@@ -154,26 +182,7 @@ public class SchematicsScreen extends GuiContainer {
         return facings == null ? CONVEYOR_FACING : facings.getOrDefault(index, CONVEYOR_FACING);
     }
 
-    private static boolean isEntryVisible(int entryTop, int top) { return entryTop >= top && entryTop + ENTRY_HEIGHT <= top + LIST_HEIGHT; }
-
-    private static Map<String, Float> formedScales() {
-        Map<String, Float> scales = new HashMap<>();
-        scales.put("IE:ArcFurnace", 0.75F);
-        return scales;
-    }
-
-    private static Map<String, float[]> formedShifts() {
-        Map<String, float[]> shifts = new HashMap<>();
-        shifts.put("IE:BottlingMachine", new float[]{-1.0F, 0.0F});
-        return shifts;
-    }
-
-    private static Map<String, float[]> previewShifts() {
-        Map<String, float[]> shifts = new HashMap<>();
-        shifts.put("IE:CokeOven", new float[]{1.0F, 0.0F});
-        shifts.put("IE:BlastFurnace", new float[]{1.0F, 0.0F});
-        return shifts;
-    }
+    private static boolean isEntryVisible(int entryTop, int top) { return entryTop + ENTRY_HEIGHT > top && entryTop < top + LIST_HEIGHT; }
 
     private void drawMultiblockPreview(MultiblockHandler.IMultiblock multiblock) {
         SchematicProjection projection = new SchematicProjection(multiblock);
@@ -182,7 +191,7 @@ public class SchematicsScreen extends GuiContainer {
         Vec3i size = projection.getSize();
         float maxDimension = Math.max(size.getY(), Math.max(size.getX(), size.getZ()));
         boolean formed = multiblock.canRenderFormedStructure();
-        float scale = multiblock.getManualScale() * (formed ? FORMED_SCALE * FORMED_SCALES.getOrDefault(multiblock.getUniqueName(), 1.0F) : 0.65F);
+        float scale = multiblock.getManualScale() * (formed ? FORMED_SCALE : 0.65F) * ESPreviewConfig.getScale(multiblock);
         BlockRendererDispatcher dispatcher = this.mc.getBlockRendererDispatcher();
         GlStateManager.pushMatrix();
         GlStateManager.enableRescaleNormal();
@@ -191,12 +200,9 @@ public class SchematicsScreen extends GuiContainer {
         GlStateManager.scale(scale, -scale, 1.0F);
         GlStateManager.rotate(25.0F, 1.0F, 0.0F, 0.0F);
         GlStateManager.rotate(45.0F, 0.0F, 1.0F, 0.0F);
-        if (formed) {
-            float[] shift = FORMED_SHIFTS.getOrDefault(multiblock.getUniqueName(), FORMED_SHIFT_DEFAULT);
-            GlStateManager.translate(size.getZ() / -2.0F + shift[0], size.getY() / -2.0F - shift[1], size.getX() / -2.0F);
-        }
+        float[] shift = ESPreviewConfig.getShift(multiblock);
+        if (formed) { GlStateManager.translate(size.getZ() / -2.0F + shift[0], size.getY() / -2.0F - shift[1], size.getX() / -2.0F); }
         else {
-            float[] shift = PREVIEW_SHIFTS.getOrDefault(multiblock.getUniqueName(), PREVIEW_SHIFT_DEFAULT);
             GlStateManager.translate(shift[0], -shift[1], 0.0F);
             GlStateManager.rotate(BLOCK_ROTATION, 0.0F, 1.0F, 0.0F);
             GlStateManager.translate(0.0F, size.getY() / -2.0F, 0.0F);
@@ -248,19 +254,33 @@ public class SchematicsScreen extends GuiContainer {
         int left = this.guiLeft + LIST_LEFT;
         int top = this.guiTop + LIST_TOP;
         if (mouseX < left || mouseX >= left + LIST_WIDTH || mouseY < top || mouseY >= top + LIST_HEIGHT) { return; }
+        if (mouseX >= left + ENTRY_WIDTH) {
+            if (maxScroll() > 0) {
+                this.draggingScrollbar = true;
+                scrollTo(mouseY);
+            }
+            return;
+        }
         int index = (mouseY - top + this.scroll) / ENTRY_HEIGHT;
         if (index < 0 || index >= this.menu.getAvailableMultiblocks().size()) { return; }
-        if (!isEntryVisible(top + index * ENTRY_HEIGHT - this.scroll, top)) { return; }
         sendButton(SchematicsContainerMenu.BUTTON_SELECT + index);
+    }
+
+    @Override protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
+        super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
+        if (this.draggingScrollbar) { scrollTo(mouseY); }
+    }
+
+    @Override protected void mouseReleased(int mouseX, int mouseY, int state) {
+        super.mouseReleased(mouseX, mouseY, state);
+        this.draggingScrollbar = false;
     }
 
     @Override public void handleMouseInput() throws IOException {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
         if (wheel == 0) { return; }
-        int content = this.menu.getAvailableMultiblocks().size() * ENTRY_HEIGHT;
-        int max = Math.max(0, content - LIST_HEIGHT);
-        this.scroll = Math.max(0, Math.min(max, this.scroll - Integer.signum(wheel) * ENTRY_HEIGHT));
+        this.scroll = MathHelper.clamp(this.scroll - Integer.signum(wheel) * ENTRY_HEIGHT, 0, maxScroll());
     }
 
     private void sendButton(int id) {

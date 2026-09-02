@@ -21,6 +21,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.client.model.obj.OBJLoader;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import tech.muddykat.engineered_schematics.util.ESPreviewConfig;
 
 import javax.annotation.Nullable;
 
@@ -47,6 +48,11 @@ public class ClientProxy extends CommonProxy {
     @Override public void postInit() {
         super.postInit();
         addManualEntries();
+    }
+
+    @Override public void loadComplete() {
+        super.loadComplete();
+        ESPreviewConfig.sync();
     }
 
     private static void addManualEntries() {

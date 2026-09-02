@@ -1,6 +1,7 @@
 package tech.muddykat.engineered_schematics.util;
 
 import tech.muddykat.engineered_schematics.EngineeredSchematics;
+import tech.muddykat.engineered_schematics.item.SchematicProjection;
 
 import blusunrize.immersiveengineering.api.MultiblockHandler;
 import net.minecraft.util.math.BlockPos;
@@ -17,11 +18,12 @@ public class ESMultiblocks {
 
     private static final String METHOD_TRIGGER = "primaryTrigger";
     private static final String IC_REGISTRY = "com.immersiveconvergence.common.multiblock.IEMultiblockRegistry";
+    private static final String IC_TEMPLATE = "com.immersiveconvergence.api.multiblock.TemplateMultiblock";
     private static final BlockPos NO_TRIGGER = new BlockPos(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
     private static final Map<String, BlockPos> TRIGGERS = triggers();
     private static final Map<String, BlockPos> RESOLVED = new HashMap<>();
     private static final Set<String> REVERSED_LENGTH = new HashSet<>(Arrays.asList("IE:Crusher", "IE:Squeezer", "IE:Fermenter", "IE:Mixer",
-            "IE:Refinery", "IE:DieselGenerator", "IE:ArcFurnace", "IE:Excavator", "IE:AutoWorkbench", "IE:BottlingMachine"));
+            "IE:Refinery", "IE:DieselGenerator", "IE:ArcFurnace", "IE:Excavator", "IE:AutoWorkbench", "IE:BottlingMachine", "IP:Pumpjack"));
 
     private ESMultiblocks() {}
 
@@ -47,10 +49,19 @@ public class ESMultiblocks {
         triggers.put("IE:SheetmetalTank", new BlockPos(1, 1, 2));
         triggers.put("IE:Silo", new BlockPos(1, 1, 2));
         triggers.put("IE:Squeezer", new BlockPos(1, 1, 1));
+        triggers.put("IP:DistillationTower", new BlockPos(0, 1, 3));
+        triggers.put("IP:Pumpjack", new BlockPos(1, 1, 4));
         return triggers;
     }
 
-    public static boolean hasReversedLength(MultiblockHandler.IMultiblock multiblock) { return REVERSED_LENGTH.contains(multiblock.getUniqueName()); }
+    public static boolean hasReversedLength(MultiblockHandler.IMultiblock multiblock) { return REVERSED_LENGTH.contains(multiblock.getUniqueName()) || isTemplateMultiblock(multiblock); }
+
+    private static boolean isTemplateMultiblock(MultiblockHandler.IMultiblock multiblock) {
+        for (Class<?> type = multiblock.getClass(); type != null; type = type.getSuperclass()) {
+            if (IC_TEMPLATE.equals(type.getName())) { return true; }
+        }
+        return false;
+    }
 
     @Nullable
     public static BlockPos getTriggerOffset(MultiblockHandler.IMultiblock multiblock) {
@@ -60,6 +71,10 @@ public class ESMultiblocks {
             resolved = fromConvergence(uniqueName);
             if (resolved == null) { resolved = TRIGGERS.get(uniqueName); }
             if (resolved == null) { resolved = readTriggerField(multiblock); }
+            if (resolved != null && isTemplateMultiblock(multiblock)) {
+                int length = SchematicProjection.getSize(multiblock).getZ();
+                if (length > 0) { resolved = new BlockPos(resolved.getX(), resolved.getY(), length - 1 - resolved.getZ()); }
+            }
             RESOLVED.put(uniqueName, resolved == null ? NO_TRIGGER : resolved);
         }
         return resolved == NO_TRIGGER ? null : resolved;

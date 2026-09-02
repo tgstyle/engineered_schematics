@@ -74,8 +74,44 @@ repositories {
     mavenCentral()
 }
 
+def icJar = null
+def icDir = file('../ImmersiveConvergence-Legacy/build/libs')
+def icJars = icDir.exists() ? fileTree(icDir) {
+    include '*-dev.jar'
+    exclude '**/*-sources.jar'
+}.files : []
+
+if (!icJars.isEmpty()) {
+    icJar = icJars.sort { a, b -> a.lastModified() <=> b.lastModified() }.last()
+    logger.lifecycle("Found Immersive Convergence dev JAR: ${icJar.name}")
+} else {
+    logger.warn('No Immersive Convergence dev JAR found in ../ImmersiveConvergence-Legacy/build/libs, build one there first')
+}
+
+def itJar = null
+def itDir = file('../MCT-Immersive-Technology-Legacy/build/libs')
+def itJars = itDir.exists() ? fileTree(itDir) {
+    include '*-dev.jar'
+    exclude '**/*-sources.jar'
+}.files : []
+
+if (!itJars.isEmpty()) {
+    itJar = itJars.sort { a, b -> a.lastModified() <=> b.lastModified() }.last()
+    logger.lifecycle("Found Immersive Technology dev JAR: ${itJar.name}")
+} else {
+    logger.warn('No Immersive Technology dev JAR found in ../MCT-Immersive-Technology-Legacy/build/libs, build one there first')
+}
+
 dependencies {
     implementation rfg.deobf("curse.maven:${common.imme_version}")
+    implementation rfg.deobf("curse.maven:${common.imps_version}")
+    if (icJar != null) {
+        implementation files(icJar)
+    }
+    if (itJar != null) {
+        implementation files(itJar)
+    }
+    runtimeOnly('zone.rong:mixinbooter:10.7') { transitive = false }
 }
 
 tasks.named('runClient').configure {
