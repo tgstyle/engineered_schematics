@@ -147,7 +147,7 @@ public class SchematicsScreen extends GuiContainer {
         String name = ESMultiblocks.getDisplayName(multiblock);
         float scale = scaleFor(this.fontRenderer, name);
         GlStateManager.pushMatrix();
-        GlStateManager.translate(this.guiLeft + 174.5F, this.guiTop + 12.0F, 0.0F);
+        GlStateManager.translate(this.guiLeft + 174.5F, this.guiTop + 9.0F, 0.0F);
         GlStateManager.scale(scale, scale, scale);
         this.fontRenderer.drawString(name, -this.fontRenderer.getStringWidth(name) / 2, 0, TEXT_COLOR);
         GlStateManager.popMatrix();
