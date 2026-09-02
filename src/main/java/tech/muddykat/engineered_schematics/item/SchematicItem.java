@@ -5,16 +5,19 @@ import tech.muddykat.engineered_schematics.util.ESConveyors;
 import tech.muddykat.engineered_schematics.util.ESLang;
 import tech.muddykat.engineered_schematics.util.ESMultiblocks;
 
+import blusunrize.immersiveengineering.common.blocks.metal.TileEntityFluidPump;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
@@ -92,7 +95,8 @@ public class SchematicItem extends Item {
                     BlockPos placed = info.tPos.add(pos);
                     world.setBlockState(placed, info.getModifiedState(), 3);
                     ItemStack cell = projection.stackFor(info);
-                    if (ESConveyors.isConveyor(cell)) { ESConveyors.applySubtype(world, placed, cell); }
+                    if (ESConveyors.isConveyor(cell)) { ESConveyors.applySubtype(world, placed, cell, conveyorFacing(settings)); }
+                    markPumpDummy(world, placed);
                     return false;
                 });
                 player.sendStatusMessage(new TextComponentTranslation("desc.engineered_schematics.info.schematic.placed"), true);
@@ -100,6 +104,23 @@ public class SchematicItem extends Item {
             return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         }
         return new ActionResult<>(EnumActionResult.PASS, stack);
+    }
+
+    @Nullable private static EnumFacing conveyorFacing(ESSchematicSettings settings) {
+        EnumFacing facing = ESConveyors.formationFacing(settings.getMultiblock().getUniqueName());
+        if (facing == null) { return null; }
+        if (settings.isMirrored()) { facing = Mirror.FRONT_BACK.mirror(facing); }
+        return settings.getRotation().rotate(facing);
+    }
+
+    private static void markPumpDummy(World world, BlockPos placed) {
+        TileEntity top = world.getTileEntity(placed);
+        if (!(top instanceof TileEntityFluidPump)) { return; }
+        TileEntity below = world.getTileEntity(placed.down());
+        if (below instanceof TileEntityFluidPump && !((TileEntityFluidPump) below).dummy) {
+            ((TileEntityFluidPump) top).dummy = true;
+            top.markDirty();
+        }
     }
 
     private static Rotation rotationFor(EnumFacing facing) {
