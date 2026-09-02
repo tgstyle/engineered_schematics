@@ -1,3 +1,23 @@
+#GENERAL
+itemGroup.engineered_schematics=Engineered Schematics
+manual.engineered_schematics.main=Engineered Schematics
+tile.engineered_schematics.schematic_table_block.name=Mesa de esquemas
+desc.engineered_schematics.schematic_table=Mesa de esquemas
+engineered_schematics.gui.schematic_table.mirror=Reflejado
+item.engineered_schematics.multiblock_schematic.name=Esquema en blanco
+item.engineered_schematics.multiblock_schematic.specific.name=Esquema de %s
+item.engineered_schematics.multiblock_schematic.specific.mirrored.name=Esquema de %s reflejado
+item.engineered_schematics.multiblock_schematic.formed=Completado
+item.engineered_schematics.multiblock_schematic.error=Error de bloque
+desc.engineered_schematics.info.schematic.size=%s
+desc.engineered_schematics.info.schematic.tier=Se puede formar con el %s
+desc.engineered_schematics.info.schematic.ie_tier=Martillo del ingeniero
+desc.engineered_schematics.info.schematic.block_info=Mantén [%s] para ver los materiales
+desc.engineered_schematics.info.schematic.no_multiblock=Esquemas en blanco
+desc.engineered_schematics.info.schematic.moved=Esquema movido
+desc.engineered_schematics.info.schematic.rotated=Esquema rotado
+desc.engineered_schematics.info.schematic.placed=(Solo creativo) Esquema colocado
+
 #Multiblock names, sourced from Immersive Engineering's own block names
 desc.engineered_schematics.multiblock.IE:CokeOven=Horno de coque
 desc.engineered_schematics.multiblock.IE:AlloySmelter=Horno de aleaciones
@@ -20,3 +40,22 @@ desc.engineered_schematics.multiblock.IE:ArcFurnace=Horno de arco eléctrico
 desc.engineered_schematics.multiblock.IE:Lightningrod=Pararrayos
 desc.engineered_schematics.multiblock.IE:Mixer=Mezclador
 desc.engineered_schematics.multiblock.IE:Feedthrough=Macarrón aislante
+
+#Multiblock names, sourced from Immersive Petroleum's own block names
+desc.engineered_schematics.multiblock.IP:DistillationTower=Torre de destilación
+desc.engineered_schematics.multiblock.IP:Pumpjack=Unidad de bombeo
+
+#MANUAL
+ie.manual.category.engineered_schematics.name=Engineered Schematics
+ie.manual.entry.es.name=Introducción
+ie.manual.entry.es.subtext=Proyectando el futuro
+ie.manual.entry.es0=Saludos y bienvenido a Engineered Schematics.<br><br>Engineered Schematics está pensado como el compañero de construcción definitivo para quienes usan Immersive Engineering y sus numerosos añadidos.<br><br>Este mod ofrece una guía detallada para construir máquinas multibloque complejas de forma rápida, precisa y eficiente.
+ie.manual.entry.es1=Tanto si eres un ingeniero veterano como si acabas de empezar, Engineered Schematics te ayudará a levantar estas construcciones avanzadas con facilidad.<br>Vamos a <link;schematicTable;empezar>.
+ie.manual.entry.schematicTable.name=Mesa de esquemas
+ie.manual.entry.schematicTable.subtext=El códice del arquitecto
+ie.manual.entry.schematicTable0=Para empezar, necesitas fabricar una Mesa de esquemas.<br>Esta mesa convierte papel en un <link;schematicItem;esquema> de cualquier estructura multibloque registrada en Immersive Engineering.
+ie.manual.entry.schematicItem.name=Esquema de multibloque
+ie.manual.entry.schematicItem.subtext=Bloque a bloque
+ie.manual.entry.schematicItem0=Esta guía explica cómo usar el Esquema de multibloque.<br>Sigue los pasos siguientes para colocar, mover y construir tus estructuras multibloque fácilmente y con información visual.
+ie.manual.entry.schematicItem1=§lColocar y mover:§r Clic derecho con el esquema en la mano PRINCIPAL para fijar o recolocar la planta del multibloque.<br>§lRotar el multibloque:§r Agáchate y haz clic derecho con el esquema en la mano PRINCIPAL para girar la estructura hacia ti.<br>§lGuía de construcción:§r Sostén el esquema en la mano SECUNDARIA para activar la guía. Al sostener el bloque correcto, las posiciones coincidentes se iluminan en §lverde§r. Un bloque mal colocado desactiva la guía y se ilumina en §lrojo§r. Una orientación o estado incorrecto se ilumina en §lamarillo§r.
+ie.manual.entry.schematicItem2=§lBloque de formación:§r Cuando la estructura está completa, el esquema muestra el bloque que hay que golpear con un martillo.

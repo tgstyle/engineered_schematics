@@ -1,3 +1,23 @@
+#GENERAL
+itemGroup.engineered_schematics=Engineered Schematics
+manual.engineered_schematics.main=Engineered Schematics
+tile.engineered_schematics.schematic_table_block.name=Mesa de Esquemas
+desc.engineered_schematics.schematic_table=Mesa de Esquemas
+engineered_schematics.gui.schematic_table.mirror=Espelhado
+item.engineered_schematics.multiblock_schematic.name=Esquema em Branco
+item.engineered_schematics.multiblock_schematic.specific.name=Esquema de %s
+item.engineered_schematics.multiblock_schematic.specific.mirrored.name=Esquema de %s Espelhado
+item.engineered_schematics.multiblock_schematic.formed=Completo
+item.engineered_schematics.multiblock_schematic.error=Erro de Bloco
+desc.engineered_schematics.info.schematic.size=%s
+desc.engineered_schematics.info.schematic.tier=Pode ser formado com o %s
+desc.engineered_schematics.info.schematic.ie_tier=Martelo do Engenheiro
+desc.engineered_schematics.info.schematic.block_info=Segure [%s] para ver os materiais
+desc.engineered_schematics.info.schematic.no_multiblock=Esquemas em Branco
+desc.engineered_schematics.info.schematic.moved=Esquema movido
+desc.engineered_schematics.info.schematic.rotated=Esquema rotacionado
+desc.engineered_schematics.info.schematic.placed=(Somente criativo) Esquema colocado
+
 #Multiblock names, sourced from Immersive Engineering's own block names
 desc.engineered_schematics.multiblock.IE:CokeOven=Forno de Coque
 desc.engineered_schematics.multiblock.IE:AlloySmelter=Forno de Liga
@@ -20,3 +40,22 @@ desc.engineered_schematics.multiblock.IE:ArcFurnace=Fornalha de Arco
 desc.engineered_schematics.multiblock.IE:Lightningrod=Para-raios
 desc.engineered_schematics.multiblock.IE:Mixer=Misturador
 desc.engineered_schematics.multiblock.IE:Feedthrough=Isolador de Passagem Direta
+
+#Multiblock names, sourced from Immersive Petroleum's own block names
+desc.engineered_schematics.multiblock.IP:DistillationTower=Torre de destilação
+desc.engineered_schematics.multiblock.IP:Pumpjack=Unidade de bombeio
+
+#MANUAL
+ie.manual.category.engineered_schematics.name=Engineered Schematics
+ie.manual.entry.es.name=Introdução
+ie.manual.entry.es.subtext=Projetando o Futuro
+ie.manual.entry.es0=Saudações e bem-vindo ao Engineered Schematics.<br><br>O Engineered Schematics foi feito para ser o companheiro de construção definitivo para quem usa a Engenharia Imersiva e seus muitos add-ons.<br><br>Este mod oferece um guia detalhado para a construção de máquinas multibloco complexas, garantindo que você as construa de forma rápida, precisa e eficiente.
+ie.manual.entry.es1=Seja você um engenheiro experiente ou um iniciante, o Engineered Schematics vai ajudá-lo a realizar essas construções avançadas com facilidade.<br>Vamos <link;schematicTable;começar>.
+ie.manual.entry.schematicTable.name=Mesa de Esquemas
+ie.manual.entry.schematicTable.subtext=O Códice do Arquiteto
+ie.manual.entry.schematicTable0=Para começar, você precisa fabricar uma Mesa de Esquemas.<br>Essa mesa transforma papel em um <link;schematicItem;esquema> de qualquer estrutura multibloco registrada na Engenharia Imersiva.
+ie.manual.entry.schematicItem.name=Esquema de Multibloco
+ie.manual.entry.schematicItem.subtext=Bloco por Bloco
+ie.manual.entry.schematicItem0=Este guia explica como usar o Esquema de Multibloco.<br>Siga os passos abaixo para posicionar, mover e construir suas estruturas multibloco facilmente e com retorno visual.
+ie.manual.entry.schematicItem1=§lPosicionar e Mover:§r Clique com o botão direito com o esquema na mão PRINCIPAL para definir ou reposicionar a área do multibloco.<br>§lGirar o Multibloco:§r Agache e clique com o botão direito com o esquema na mão PRINCIPAL para girar a estrutura na sua direção.<br>§lGuia de Construção:§r Segure o esquema na mão SECUNDÁRIA para ativar o guia. Ao segurar o bloco correto, as posições correspondentes ficam §lverdes§r. Um bloco colocado errado desativa o guia e fica §lvermelho§r. Orientação ou estado errado fica §lamarelo§r.
+ie.manual.entry.schematicItem2=§lBloco de Formação:§r Quando a estrutura está completa, o esquema mostra o bloco que deve ser golpeado com um martelo.

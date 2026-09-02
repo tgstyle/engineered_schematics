@@ -1,3 +1,23 @@
+#GENERAL
+itemGroup.engineered_schematics=工程示意圖紙
+manual.engineered_schematics.main=工程示意圖紙
+tile.engineered_schematics.schematic_table_block.name=示意圖紙台
+desc.engineered_schematics.schematic_table=示意圖紙台
+engineered_schematics.gui.schematic_table.mirror=鏡像
+item.engineered_schematics.multiblock_schematic.name=空白示意圖紙
+item.engineered_schematics.multiblock_schematic.specific.name=%s示意圖紙
+item.engineered_schematics.multiblock_schematic.specific.mirrored.name=鏡像%s示意圖紙
+item.engineered_schematics.multiblock_schematic.formed=完成
+item.engineered_schematics.multiblock_schematic.error=方塊有誤
+desc.engineered_schematics.info.schematic.size=%s
+desc.engineered_schematics.info.schematic.tier=可使用%s建造
+desc.engineered_schematics.info.schematic.ie_tier=工程師槌
+desc.engineered_schematics.info.schematic.block_info=按住[%s]查看材料資訊
+desc.engineered_schematics.info.schematic.no_multiblock=空白示意圖紙
+desc.engineered_schematics.info.schematic.moved=示意圖已移動
+desc.engineered_schematics.info.schematic.rotated=示意圖已旋轉
+desc.engineered_schematics.info.schematic.placed=（僅創造模式）示意圖已放置
+
 #Multiblock names, sourced from Immersive Engineering's own block names
 desc.engineered_schematics.multiblock.IE:CokeOven=焦爐
 desc.engineered_schematics.multiblock.IE:AlloySmelter=合金爐
@@ -20,3 +40,22 @@ desc.engineered_schematics.multiblock.IE:ArcFurnace=電弧爐
 desc.engineered_schematics.multiblock.IE:Lightningrod=避雷針
 desc.engineered_schematics.multiblock.IE:Mixer=攪拌混合機
 desc.engineered_schematics.multiblock.IE:Feedthrough=穿心絕緣子
+
+#Multiblock names, sourced from Immersive Petroleum's own block names
+desc.engineered_schematics.multiblock.IP:DistillationTower=精餾塔
+desc.engineered_schematics.multiblock.IP:Pumpjack=採油機
+
+#MANUAL
+ie.manual.category.engineered_schematics.name=工程示意圖紙
+ie.manual.entry.es.name=介紹
+ie.manual.entry.es.subtext=投出未來
+ie.manual.entry.es0=歡迎各位遊玩工程示意圖紙（Engineered Schematics）。<br><br>在遊玩 Immersive Engineering 及其眾多附屬的過程中，工程示意圖紙能成為各位搭建機器的得力助手。<br><br>本模組能為複雜多方塊機器的建造提供細緻的指引，助你快速、準確、高效地完成任務。
+ie.manual.entry.es1=無論你是嫻熟的工程師，還是初出茅廬，本模組都能讓你輕鬆搭建前文所說的高級建築。<br>我們<link;schematicTable;開始吧>。
+ie.manual.entry.schematicTable.name=示意圖紙台
+ie.manual.entry.schematicTable.subtext=建築師的寶典
+ie.manual.entry.schematicTable0=在開始前，需先合成一張示意圖紙台。<br>這張加工台能將紙變成<link;schematicItem;示意圖紙>，它支援 Immersive Engineering 中註冊的所有多方塊結構。
+ie.manual.entry.schematicItem.name=多方塊示意圖紙
+ie.manual.entry.schematicItem.subtext=一方塊一腳印
+ie.manual.entry.schematicItem0=這篇指南主要介紹多方塊示意圖紙的使用方法。<br>跟隨後文步驟操作，即可在視覺回饋的指引下，輕鬆放置、移動、搭建多方塊結構。
+ie.manual.entry.schematicItem1=§l放置與移動：§r主手持示意圖紙，右鍵點擊可設定或重新設定多方塊影像的基準。<br>§l旋轉多方塊：§r主手持示意圖紙，Shift右鍵點擊可讓多方塊影像旋轉至面向你。<br>§l建築指示：§r副手持示意圖紙，可啟用建築指示。持有正確的方塊時，對應的位置會以§l綠色§r突顯；放錯方塊會關閉指示並以§l紅色§r突顯；方向或狀態出錯則以§l黃色§r突顯。
+ie.manual.entry.schematicItem2=§l成型方塊：§r結構搭建完成後，示意圖紙會突顯成型方塊，用工程師槌等敲擊即可。

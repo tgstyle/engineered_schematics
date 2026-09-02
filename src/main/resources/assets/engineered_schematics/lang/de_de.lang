@@ -1,3 +1,23 @@
+#GENERAL
+itemGroup.engineered_schematics=Engineered Schematics
+manual.engineered_schematics.main=Engineered Schematics
+tile.engineered_schematics.schematic_table_block.name=Bauplantisch
+desc.engineered_schematics.schematic_table=Bauplantisch
+engineered_schematics.gui.schematic_table.mirror=Gespiegelt
+item.engineered_schematics.multiblock_schematic.name=Leerer Bauplan
+item.engineered_schematics.multiblock_schematic.specific.name=%s-Bauplan
+item.engineered_schematics.multiblock_schematic.specific.mirrored.name=Gespiegelter %s-Bauplan
+item.engineered_schematics.multiblock_schematic.formed=Fertiggestellt
+item.engineered_schematics.multiblock_schematic.error=Blockfehler
+desc.engineered_schematics.info.schematic.size=%s
+desc.engineered_schematics.info.schematic.tier=Kann mit dem %s errichtet werden
+desc.engineered_schematics.info.schematic.ie_tier=Ingenieurshammer
+desc.engineered_schematics.info.schematic.block_info=Halte [%s] für die Materialien
+desc.engineered_schematics.info.schematic.no_multiblock=Leere Baupläne
+desc.engineered_schematics.info.schematic.moved=Bauplan verschoben
+desc.engineered_schematics.info.schematic.rotated=Bauplan gedreht
+desc.engineered_schematics.info.schematic.placed=(Nur Kreativmodus) Bauplan platziert
+
 #Multiblock names, sourced from Immersive Engineering's own block names
 desc.engineered_schematics.multiblock.IE:CokeOven=Kokerei
 desc.engineered_schematics.multiblock.IE:AlloySmelter=Legierungsofen
@@ -20,3 +40,22 @@ desc.engineered_schematics.multiblock.IE:ArcFurnace=Lichtbogenofen
 desc.engineered_schematics.multiblock.IE:Lightningrod=Blitzableiter
 desc.engineered_schematics.multiblock.IE:Mixer=Mixer
 desc.engineered_schematics.multiblock.IE:Feedthrough=Durchgangsisolator
+
+#Multiblock names, sourced from Immersive Petroleum's own block names
+desc.engineered_schematics.multiblock.IP:DistillationTower=Rektifikationskolonne
+desc.engineered_schematics.multiblock.IP:Pumpjack=Tiefpumpe
+
+#MANUAL
+ie.manual.category.engineered_schematics.name=Engineered Schematics
+ie.manual.entry.es.name=Einführung
+ie.manual.entry.es.subtext=Die Zukunft projiziert
+ie.manual.entry.es0=Willkommen bei Engineered Schematics.<br><br>Engineered Schematics ist als idealer Baubegleiter für alle gedacht, die Immersive Engineering und seine zahlreichen Add-ons nutzen.<br><br>Diese Mod bietet eine ausführliche Anleitung zum Errichten komplexer Multiblock-Maschinen, damit sie schnell, genau und effizient entstehen.
+ie.manual.entry.es1=Ob erfahrener Ingenieur oder Neuling – Engineered Schematics führt mühelos durch diese anspruchsvollen Bauwerke.<br>Also <link;schematicTable;legen wir los>.
+ie.manual.entry.schematicTable.name=Bauplantisch
+ie.manual.entry.schematicTable.subtext=Das Kompendium des Architekten
+ie.manual.entry.schematicTable0=Zuerst wird ein Bauplantisch benötigt.<br>Dieser Tisch verwandelt Papier in einen <link;schematicItem;Bauplan> für jede bei Immersive Engineering registrierte Multiblock-Struktur.
+ie.manual.entry.schematicItem.name=Multiblock-Bauplan
+ie.manual.entry.schematicItem.subtext=Block für Block
+ie.manual.entry.schematicItem0=Diese Anleitung erklärt den Umgang mit dem Multiblock-Bauplan.<br>Mit den folgenden Schritten lassen sich Multiblock-Strukturen mit visueller Rückmeldung mühelos platzieren, verschieben und errichten.
+ie.manual.entry.schematicItem1=§lPlatzieren und Verschieben:§r Rechtsklick mit dem Bauplan in der HAUPTHAND setzt die Grundfläche des Multiblocks oder versetzt sie.<br>§lMultiblock drehen:§r Schleichen und Rechtsklick mit dem Bauplan in der HAUPTHAND dreht die Struktur, sodass sie dir zugewandt ist.<br>§lBauhilfe:§r Der Bauplan in der ZWEITHAND aktiviert die Bauhilfe. Mit dem richtigen Block in der Hand leuchten passende Positionen §lgrün§r. Ein falsch gesetzter Block deaktiviert die Hilfe und leuchtet §lrot§r. Falsche Ausrichtung oder falscher Zustand leuchtet §lgelb§r.
+ie.manual.entry.schematicItem2=§lFormungsblock:§r Ist die Struktur vollständig, zeigt der Bauplan den Block, der mit einem Hammer geschlagen werden muss.

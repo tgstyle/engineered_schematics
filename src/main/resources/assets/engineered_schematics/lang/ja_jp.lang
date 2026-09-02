@@ -1,3 +1,23 @@
+#GENERAL
+itemGroup.engineered_schematics=Engineered Schematics
+manual.engineered_schematics.main=Engineered Schematics
+tile.engineered_schematics.schematic_table_block.name=設計図テーブル
+desc.engineered_schematics.schematic_table=設計図テーブル
+engineered_schematics.gui.schematic_table.mirror=反転
+item.engineered_schematics.multiblock_schematic.name=空白の設計図
+item.engineered_schematics.multiblock_schematic.specific.name=%sの設計図
+item.engineered_schematics.multiblock_schematic.specific.mirrored.name=反転した%sの設計図
+item.engineered_schematics.multiblock_schematic.formed=完成
+item.engineered_schematics.multiblock_schematic.error=ブロックエラー
+desc.engineered_schematics.info.schematic.size=%s
+desc.engineered_schematics.info.schematic.tier=%sで組み立てられます
+desc.engineered_schematics.info.schematic.ie_tier=エンジニア・ハンマー
+desc.engineered_schematics.info.schematic.block_info=[%s]を押して素材を表示
+desc.engineered_schematics.info.schematic.no_multiblock=空白の設計図
+desc.engineered_schematics.info.schematic.moved=設計図を移動しました
+desc.engineered_schematics.info.schematic.rotated=設計図を回転しました
+desc.engineered_schematics.info.schematic.placed=（クリエイティブ限定）設計図を設置しました
+
 #Multiblock names, sourced from Immersive Engineering's own block names
 desc.engineered_schematics.multiblock.IE:CokeOven=コークス炉
 desc.engineered_schematics.multiblock.IE:AlloySmelter=合金窯
@@ -20,3 +40,22 @@ desc.engineered_schematics.multiblock.IE:ArcFurnace=アーク炉
 desc.engineered_schematics.multiblock.IE:Lightningrod=避雷針
 desc.engineered_schematics.multiblock.IE:Mixer=工業用撹拌機
 desc.engineered_schematics.multiblock.IE:Feedthrough=貫通碍子
+
+#Multiblock names, sourced from Immersive Petroleum's own block names
+desc.engineered_schematics.multiblock.IP:DistillationTower=蒸留塔
+desc.engineered_schematics.multiblock.IP:Pumpjack=ポンプジャック
+
+#MANUAL
+ie.manual.category.engineered_schematics.name=Engineered Schematics
+ie.manual.entry.es.name=はじめに
+ie.manual.entry.es.subtext=未来を投影する
+ie.manual.entry.es0=Engineered Schematicsへようこそ。<br><br>Engineered Schematicsは、Immersive Engineeringとその数多くのアドオンを使うプレイヤーのための、究極の建築サポートを目指したModです。<br><br>複雑なマルチブロック機械の建設を詳しく案内し、素早く、正確に、効率よく組み立てられるようにします。
+ie.manual.entry.es1=熟練のエンジニアでも、始めたばかりでも、Engineered Schematicsがあれば高度な建築も簡単です。<br>さっそく<link;schematicTable;始めましょう>。
+ie.manual.entry.schematicTable.name=設計図テーブル
+ie.manual.entry.schematicTable.subtext=建築家の宝典
+ie.manual.entry.schematicTable0=まずは設計図テーブルを作りましょう。<br>このテーブルは紙を、Immersive Engineeringに登録されている任意のマルチブロック構造の<link;schematicItem;設計図>に変えます。
+ie.manual.entry.schematicItem.name=マルチブロック設計図
+ie.manual.entry.schematicItem.subtext=ブロックを一つずつ
+ie.manual.entry.schematicItem0=このガイドではマルチブロック設計図の使い方を説明します。<br>以下の手順に従えば、視覚的なガイド付きでマルチブロック構造を簡単に設置・移動・建設できます。
+ie.manual.entry.schematicItem1=§l設置と移動：§rメインハンドに設計図を持って右クリックすると、マルチブロックの設置範囲を設定・再配置できます。<br>§l回転：§rメインハンドに設計図を持ってスニークしながら右クリックすると、構造物が自分の方を向くように回転します。<br>§l建築ガイド：§rオフハンドに設計図を持つと建築ガイドが有効になります。正しいブロックを持っていると、対応する位置が§l緑色§rにハイライトされます。間違って設置されたブロックがあるとガイドが無効になり§l赤色§rに、向きや状態が違う場合は§l黄色§rにハイライトされます。
+ie.manual.entry.schematicItem2=§l形成ブロック：§r構造が完成すると、設計図がハンマーで叩くべき形成ブロックを表示します。

@@ -41,6 +41,10 @@ desc.engineered_schematics.multiblock.IE:Lightningrod=Lightning Rod
 desc.engineered_schematics.multiblock.IE:Mixer=Mixer
 desc.engineered_schematics.multiblock.IE:Feedthrough=Feedthrough Insulator
 
+#Multiblock names, sourced from Immersive Petroleum's own block names
+desc.engineered_schematics.multiblock.IP:DistillationTower=Distillation Tower
+desc.engineered_schematics.multiblock.IP:Pumpjack=Pumpjack
+
 #MANUAL
 ie.manual.category.engineered_schematics.name=Engineered Schematics
 ie.manual.entry.es.name=Introduction

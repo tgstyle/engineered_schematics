@@ -1,10 +1,14 @@
 #GENERAL
 itemGroup.engineered_schematics=Engineered Schematics
+manual.engineered_schematics.main=Engineered Schematics
 tile.engineered_schematics.schematic_table_block.name=Чертёжная парта
 desc.engineered_schematics.schematic_table=Чертёжная парта
 engineered_schematics.gui.schematic_table.mirror=Отзеркалить
 item.engineered_schematics.multiblock_schematic.name=Пустая схема
 item.engineered_schematics.multiblock_schematic.specific.name=%s Схема
+item.engineered_schematics.multiblock_schematic.specific.mirrored.name=Зеркальная %s Схема
+item.engineered_schematics.multiblock_schematic.formed=Готово
+item.engineered_schematics.multiblock_schematic.error=Ошибка блока
 desc.engineered_schematics.info.schematic.size=%s
 desc.engineered_schematics.info.schematic.tier=Его можно сформировать с помощью %s
 desc.engineered_schematics.info.schematic.ie_tier=Молота инженера
@@ -36,3 +40,22 @@ desc.engineered_schematics.multiblock.IE:ArcFurnace=Дуговая печь
 desc.engineered_schematics.multiblock.IE:Lightningrod=Молниеотвод
 desc.engineered_schematics.multiblock.IE:Mixer=Смеситель
 desc.engineered_schematics.multiblock.IE:Feedthrough=Проходной изолятор
+
+#Multiblock names, sourced from Immersive Petroleum's own block names
+desc.engineered_schematics.multiblock.IP:DistillationTower=Ректификационная колонна
+desc.engineered_schematics.multiblock.IP:Pumpjack=Штанговый насос
+
+#MANUAL
+ie.manual.category.engineered_schematics.name=Engineered Schematics
+ie.manual.entry.es.name=Введение
+ie.manual.entry.es.subtext=Проецируя будущее
+ie.manual.entry.es0=Приветствуем в Engineered Schematics.<br><br>Engineered Schematics задуман как незаменимый помощник в строительстве для игроков, использующих Immersive Engineering и его многочисленные дополнения.<br><br>Этот мод подробно направляет постройку сложных мультиблочных машин, позволяя возводить их быстро, точно и эффективно.
+ie.manual.entry.es1=Будь вы опытным инженером или новичком, Engineered Schematics поможет легко справиться с этими непростыми постройками.<br>Давайте <link;schematicTable;начнём>.
+ie.manual.entry.schematicTable.name=Чертёжная парта
+ie.manual.entry.schematicTable.subtext=Кодекс архитектора
+ie.manual.entry.schematicTable0=Для начала изготовьте Чертёжную парту.<br>Эта парта превращает бумагу в <link;schematicItem;схему> любой мультиблочной структуры, зарегистрированной в Immersive Engineering.
+ie.manual.entry.schematicItem.name=Схема мультиблока
+ie.manual.entry.schematicItem.subtext=Блок за блоком
+ie.manual.entry.schematicItem0=Это руководство объясняет, как пользоваться схемой мультиблока.<br>Следуйте шагам ниже, чтобы легко размещать, перемещать и строить мультиблочные структуры с наглядными подсказками.
+ie.manual.entry.schematicItem1=§lРазмещение и перемещение:§r ПКМ со схемой в ОСНОВНОЙ руке задаёт или переносит основание мультиблока.<br>§lПоворот мультиблока:§r Присядьте и нажмите ПКМ со схемой в ОСНОВНОЙ руке, чтобы повернуть структуру к себе.<br>§lПодсказка строительства:§r Держите схему во ВТОРОЙ руке, чтобы включить подсказку. Пока в руке правильный блок, подходящие позиции подсвечиваются §lзелёным§r. Неверно поставленный блок отключает подсказку и подсвечивается §lкрасным§r. Неверная ориентация или состояние подсвечивается §lжёлтым§r.
+ie.manual.entry.schematicItem2=§lБлок формирования:§r Когда структура завершена, схема показывает блок, по которому нужно ударить молотом.

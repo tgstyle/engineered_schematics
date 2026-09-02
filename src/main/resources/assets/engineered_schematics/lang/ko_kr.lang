@@ -1,3 +1,23 @@
+#GENERAL
+itemGroup.engineered_schematics=Engineered Schematics
+manual.engineered_schematics.main=Engineered Schematics
+tile.engineered_schematics.schematic_table_block.name=설계도 작업대
+desc.engineered_schematics.schematic_table=설계도 작업대
+engineered_schematics.gui.schematic_table.mirror=반전
+item.engineered_schematics.multiblock_schematic.name=빈 설계도
+item.engineered_schematics.multiblock_schematic.specific.name=%s 설계도
+item.engineered_schematics.multiblock_schematic.specific.mirrored.name=반전된 %s 설계도
+item.engineered_schematics.multiblock_schematic.formed=완성
+item.engineered_schematics.multiblock_schematic.error=블록 오류
+desc.engineered_schematics.info.schematic.size=%s
+desc.engineered_schematics.info.schematic.tier=%s로 형성할 수 있습니다
+desc.engineered_schematics.info.schematic.ie_tier=엔지니어의 망치
+desc.engineered_schematics.info.schematic.block_info=[%s] 키를 누르고 있으면 재료가 표시됩니다
+desc.engineered_schematics.info.schematic.no_multiblock=빈 설계도
+desc.engineered_schematics.info.schematic.moved=설계도 이동됨
+desc.engineered_schematics.info.schematic.rotated=설계도 회전됨
+desc.engineered_schematics.info.schematic.placed=(크리에이티브 전용) 설계도 배치됨
+
 #Multiblock names, sourced from Immersive Engineering's own block names
 desc.engineered_schematics.multiblock.IE:CokeOven=코크스 오븐
 desc.engineered_schematics.multiblock.IE:AlloySmelter=합금 가마
@@ -20,3 +40,22 @@ desc.engineered_schematics.multiblock.IE:ArcFurnace=아크 화로
 desc.engineered_schematics.multiblock.IE:Lightningrod=빛나는 막대기
 desc.engineered_schematics.multiblock.IE:Mixer=혼합기
 desc.engineered_schematics.multiblock.IE:Feedthrough=피드스루 절연체
+
+#Multiblock names, sourced from Immersive Petroleum's own block names
+desc.engineered_schematics.multiblock.IP:DistillationTower=정유탑
+desc.engineered_schematics.multiblock.IP:Pumpjack=시추기
+
+#MANUAL
+ie.manual.category.engineered_schematics.name=Engineered Schematics
+ie.manual.entry.es.name=소개
+ie.manual.entry.es.subtext=미래를 투영하다
+ie.manual.entry.es0=Engineered Schematics에 오신 것을 환영합니다.<br><br>Engineered Schematics는 이머시브 엔지니어링과 그 수많은 애드온을 사용하는 플레이어를 위한 최고의 건축 도우미를 목표로 하는 모드입니다.<br><br>복잡한 멀티블록 기계의 건설 과정을 자세히 안내하여 빠르고 정확하며 효율적으로 지을 수 있게 해 줍니다.
+ie.manual.entry.es1=숙련된 엔지니어든 이제 막 시작했든, Engineered Schematics와 함께라면 고급 건축물도 쉽게 지을 수 있습니다.<br>그럼 <link;schematicTable;시작해 봅시다>.
+ie.manual.entry.schematicTable.name=설계도 작업대
+ie.manual.entry.schematicTable.subtext=건축가의 서고
+ie.manual.entry.schematicTable0=먼저 설계도 작업대를 제작해야 합니다.<br>이 작업대는 종이를 이머시브 엔지니어링에 등록된 모든 멀티블록 구조물의 <link;schematicItem;설계도>로 바꿔 줍니다.
+ie.manual.entry.schematicItem.name=멀티블록 설계도
+ie.manual.entry.schematicItem.subtext=블록 하나하나
+ie.manual.entry.schematicItem0=이 가이드는 멀티블록 설계도의 사용법을 설명합니다.<br>아래 단계를 따라 하면 시각적 안내와 함께 멀티블록 구조물을 쉽게 배치하고 옮기고 지을 수 있습니다.
+ie.manual.entry.schematicItem1=§l배치와 이동:§r 설계도를 주로 쓰는 손에 들고 우클릭하면 멀티블록의 바닥 면적을 설정하거나 옮길 수 있습니다.<br>§l회전:§r 웅크린 채 주로 쓰는 손의 설계도로 우클릭하면 구조물이 자신을 향하도록 회전합니다.<br>§l건축 안내:§r 다른 손에 설계도를 들면 건축 안내가 켜집니다. 올바른 블록을 들고 있으면 해당 위치가 §l초록색§r으로 표시됩니다. 잘못 놓인 블록이 있으면 안내가 꺼지고 §l빨간색§r으로, 방향이나 상태가 다르면 §l노란색§r으로 표시됩니다.
+ie.manual.entry.schematicItem2=§l형성 블록:§r 구조물이 완성되면 설계도가 망치로 두드릴 형성 블록을 보여 줍니다.
