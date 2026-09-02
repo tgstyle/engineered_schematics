@@ -68,16 +68,19 @@ public class ESMultiblocks {
         String uniqueName = multiblock.getUniqueName();
         BlockPos resolved = RESOLVED.get(uniqueName);
         if (resolved == null) {
-            resolved = fromConvergence(uniqueName);
+            resolved = toCanonical(multiblock, fromConvergence(uniqueName));
             if (resolved == null) { resolved = TRIGGERS.get(uniqueName); }
-            if (resolved == null) { resolved = readTriggerField(multiblock); }
-            if (resolved != null && isTemplateMultiblock(multiblock)) {
-                int length = SchematicProjection.getSize(multiblock).getZ();
-                if (length > 0) { resolved = new BlockPos(resolved.getX(), resolved.getY(), length - 1 - resolved.getZ()); }
-            }
+            if (resolved == null) { resolved = toCanonical(multiblock, readTriggerField(multiblock)); }
             RESOLVED.put(uniqueName, resolved == null ? NO_TRIGGER : resolved);
         }
         return resolved == NO_TRIGGER ? null : resolved;
+    }
+
+    @Nullable
+    private static BlockPos toCanonical(MultiblockHandler.IMultiblock multiblock, @Nullable BlockPos template) {
+        if (template == null || !hasReversedLength(multiblock)) { return template; }
+        int length = SchematicProjection.getSize(multiblock).getZ();
+        return length > 0 ? new BlockPos(template.getX(), template.getY(), length - 1 - template.getZ()) : template;
     }
 
     @Nullable
