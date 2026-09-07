@@ -45,6 +45,42 @@ desc.engineered_schematics.multiblock.IE:Feedthrough=Проходной изол
 desc.engineered_schematics.multiblock.IP:DistillationTower=Ректификационная колонна
 desc.engineered_schematics.multiblock.IP:Pumpjack=Штанговый насос
 
+#Multiblock names, sourced from Immersive Intelligence's own block names
+desc.engineered_schematics.multiblock.II:RadioStation=Радиостанция
+desc.engineered_schematics.multiblock.II:PrintingPress=Печатный пресс
+desc.engineered_schematics.multiblock.II:DataInputMachine=Машина ввода данных
+desc.engineered_schematics.multiblock.II:ArithmeticLogicMachine=Арифметико-логическая машина
+desc.engineered_schematics.multiblock.II:ChemicalBath=Химическая ванна
+desc.engineered_schematics.multiblock.II:Electrolyzer=Электролизёр
+desc.engineered_schematics.multiblock.II:PrecisionAssembler=Точный сборщик
+desc.engineered_schematics.multiblock.II:BallisticComputer=Баллистический компьютер
+desc.engineered_schematics.multiblock.II:ArtilleryHowitzer=Артиллерийское орудие
+desc.engineered_schematics.multiblock.II:ScanningConveyor=Конвейерный сканер
+desc.engineered_schematics.multiblock.II:Packer=Упаковщик
+desc.engineered_schematics.multiblock.II:RedstoneDataInterface=Редстоун интерфейс данных
+desc.engineered_schematics.multiblock.II:Filler=Наполнитель
+desc.engineered_schematics.multiblock.II:Coagulator=Коагулятор
+desc.engineered_schematics.multiblock.II:ProjectileWorkshop=Мастерская пуль
+desc.engineered_schematics.multiblock.II:AmmunitionAssembler=Сборщик боеприпасов
+desc.engineered_schematics.multiblock.II:HeavyAmmunitionAssembler=Сборщик тяжёлых боеприпасов
+desc.engineered_schematics.multiblock.II:FuelStation=Заправочная станция
+desc.engineered_schematics.multiblock.II:VehicleWorkshop=Автомастерская
+desc.engineered_schematics.multiblock.II:Flagpole=Флагшток
+desc.engineered_schematics.multiblock.II:Radar=Радар
+desc.engineered_schematics.multiblock.II:Emplacement=Огневая точка
+desc.engineered_schematics.multiblock.II:ChemicalPainter=Химический маляр
+desc.engineered_schematics.multiblock.II:Vulcanizer=Вулканизатор
+desc.engineered_schematics.multiblock.II:SkycratePost=Фуникулёрный пост
+desc.engineered_schematics.multiblock.II:SkycrateStation=Фуникулёрная станция
+desc.engineered_schematics.multiblock.II:SkycartStation=Фуникулёрная пассажирская станция
+desc.engineered_schematics.multiblock.II:Sawmill=Лесопилка
+desc.engineered_schematics.multiblock.II:WoodenFenceGate=Деревянные ворота
+desc.engineered_schematics.multiblock.II:WoodenChainFenceGate=Деревянные сеточные ворота
+desc.engineered_schematics.multiblock.II:SteelFenceGate=Стальные ворота
+desc.engineered_schematics.multiblock.II:SteelChainFenceGate=Стальные сеточные ворота
+desc.engineered_schematics.multiblock.II:AluminiumFenceGate=Алюминиевые ворота
+desc.engineered_schematics.multiblock.II:AluminiumChainFenceGate=Алюминиевые сеточные ворота
+
 #MANUAL
 ie.manual.category.engineered_schematics.name=Engineered Schematics
 ie.manual.entry.es.name=Введение

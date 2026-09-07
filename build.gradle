@@ -105,6 +105,7 @@ if (!itJars.isEmpty()) {
 dependencies {
     implementation rfg.deobf("curse.maven:${common.imme_version}")
     implementation rfg.deobf("curse.maven:${common.imps_version}")
+    implementation rfg.deobf("curse.maven:${common.imin_version}")
     if (icJar != null) {
         implementation files(icJar)
     }
