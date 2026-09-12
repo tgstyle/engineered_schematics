@@ -75,20 +75,23 @@ public class ESMultiblocks {
     private static Object fromConvergenceApi(String uniqueName) {
         Object cached = IC_OBJECTS.get(uniqueName);
         if (cached != null) { return cached == IC_OBJECTS ? null : cached; }
-        Object found = null;
-        try {
-            Object list = Class.forName(IC_API_REGISTRY).getMethod("getMultiblocks").invoke(null);
-            if (list instanceof Iterable) {
-                for (Object candidate : (Iterable<?>)list) {
-                    Object name = candidate.getClass().getMethod("getUniqueName").invoke(candidate);
-                    if (uniqueName.equals(name)) { found = candidate; break; }
-                }
-            }
-        }
-        catch (ReflectiveOperationException | LinkageError exception) {
-        }
+        Object found = findInConvergenceApi(uniqueName);
         IC_OBJECTS.put(uniqueName, found == null ? IC_OBJECTS : found);
         return found;
+    }
+
+    @Nullable
+    private static Object findInConvergenceApi(String uniqueName) {
+        try {
+            Object list = Class.forName(IC_API_REGISTRY).getMethod("getMultiblocks").invoke(null);
+            if (!(list instanceof Iterable)) { return null; }
+            for (Object candidate : (Iterable<?>)list) {
+                Object name = candidate.getClass().getMethod("getUniqueName").invoke(candidate);
+                if (uniqueName.equals(name)) { return candidate; }
+            }
+            return null;
+        }
+        catch (ReflectiveOperationException | LinkageError exception) { return null; }
     }
 
     @Nullable
