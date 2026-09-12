@@ -74,6 +74,13 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    clientRuntime {
+        canBeConsumed = false
+        canBeResolved = true
+    }
+}
+
 def icJar = null
 def icDir = file('../ImmersiveConvergence-Legacy/build/libs')
 def icJars = icDir.exists() ? fileTree(icDir) {
@@ -113,10 +120,13 @@ dependencies {
         implementation files(itJar)
     }
     runtimeOnly('zone.rong:mixinbooter:10.7') { transitive = false }
+
+    clientRuntime rfg.deobf("curse.maven:${common.bf3r_version}")
 }
 
 tasks.named('runClient').configure {
     extraArgs.addAll('--width', '1920', '--height', '1080')
+    classpath configurations.clientRuntime
 }
 
 tasks.named('runServer').configure {
