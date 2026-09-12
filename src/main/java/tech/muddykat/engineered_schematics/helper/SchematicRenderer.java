@@ -193,7 +193,6 @@ public class SchematicRenderer {
                 cell.getY() + 0.5F,
                 cell.getZ() + 0.5F + outward.getZ() * (0.5F + TRIGGER_LIFT));
         GlStateManager.rotate(90.0F * rotation.ordinal(), 0.0F, 1.0F, 0.0F);
-        GlStateManager.translate(-0.5F * TRIGGER_SCALE, -0.5F * TRIGGER_SCALE, 0.0F);
         GlStateManager.scale(TRIGGER_SCALE, TRIGGER_SCALE, TRIGGER_SCALE);
         ESShaders.use(0.0F, 0.67F, 0.0F, 0.0F);
         Minecraft.getMinecraft().getRenderItem().renderItem(tool, ItemCameraTransforms.TransformType.NONE);
